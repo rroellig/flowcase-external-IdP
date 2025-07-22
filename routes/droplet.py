@@ -6,8 +6,7 @@ import json
 import docker
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
-from flask import Blueprint, jsonify, request, render_template, redirect, make_response, send_from_directory
-from flask_login import login_required, current_user
+from flask import Blueprint, jsonify, request, render_template, redirect, make_response, send_from_directory, g
 import psutil
 from __init__ import db, __version__
 from models.droplet import Droplet, DropletInstance
@@ -18,7 +17,6 @@ import utils.docker
 droplet_bp = Blueprint('droplet', __name__)
 
 @droplet_bp.route('/api/droplets', methods=['GET'])
-@login_required
 def get_droplets():
 	droplets = Droplet.query.all()
 	droplets = sorted(droplets, key=lambda x: x.display_name)
@@ -46,9 +44,8 @@ def get_droplets():
 	return jsonify(response)
 
 @droplet_bp.route('/api/instances', methods=['GET'])
-@login_required
 def get_instances():
-	instances = DropletInstance.query.filter_by(user_id=current_user.id).all()
+	instances = DropletInstance.query.filter_by(user_id=g.user.id).all()
  
 	response = {
 		"success": True,
@@ -79,7 +76,6 @@ def get_instances():
 	return jsonify(response)
 
 @droplet_bp.route('/api/instance/request', methods=['POST'])
-@login_required
 def request_new_instance():
 	droplet_id = request.json.get('droplet_id')
 	droplet = Droplet.query.filter_by(id=droplet_id).first()
@@ -123,11 +119,11 @@ def request_new_instance():
 		max_allowed_cores = system_cores * 2.0
 		
 		if projected_memory_usage > max_allowed_memory:
-			log("ERROR", f"Insufficient memory for user {current_user.username} to request droplet {droplet.display_name} - would use {projected_memory_usage}MB of {max_allowed_memory}MB allowed")
+			log("ERROR", f"Insufficient memory for user {g.user.username} to request droplet {droplet.display_name} - would use {projected_memory_usage}MB of {max_allowed_memory}MB allowed")
 			return jsonify({"success": False, "error": "Insufficient memory to start this droplet"}), 400
 		
 		if projected_core_usage > max_allowed_cores:
-			log("ERROR", f"Insufficient CPU cores for user {current_user.username} to request droplet {droplet.display_name} - would use {projected_core_usage} of {max_allowed_cores} cores allowed")
+			log("ERROR", f"Insufficient CPU cores for user {g.user.username} to request droplet {droplet.display_name} - would use {projected_core_usage} of {max_allowed_cores} cores allowed")
 			return jsonify({"success": False, "error": "Insufficient CPU cores to start this droplet"}), 400
  
 	# Check if docker client is available
@@ -156,12 +152,12 @@ def request_new_instance():
 		return jsonify({"success": False, "error": "Docker image not found. Image might still be downloading."}), 400
 
 	# Create a new instance
-	instance = DropletInstance(droplet_id=droplet_id, user_id=current_user.id)
+	instance = DropletInstance(droplet_id=droplet_id, user_id=g.user.id)
 	db.session.add(instance)
 	db.session.commit()
  
 	# Create a docker container
-	log("INFO", f"Creating new instance for user {current_user.username} with droplet {droplet.display_name}")
+	log("INFO", f"Creating new instance for user {g.user.username} with droplet {droplet.display_name}")
  
 	name = f"flowcase_generated_{instance.id}"
  
@@ -177,8 +173,8 @@ def request_new_instance():
 		profilePath = droplet.container_persistent_profile_path
   
 		# Replace variables
-		profilePath = profilePath.replace("{user_id}", str(current_user.id))
-		profilePath = profilePath.replace("{username}", current_user.username)
+		profilePath = profilePath.replace("{user_id}", str(g.user.id))
+		profilePath = profilePath.replace("{username}", g.user.username)
 		profilePath = profilePath.replace("{droplet_id}", str(droplet_id))
   
 		# Ensure path ends with /
@@ -207,7 +203,7 @@ def request_new_instance():
 		container = utils.docker.docker_client.containers.run(
 			image=image_name,
 			name=name,
-			environment={"DISPLAY": ":1", "VNC_PW": current_user.auth_token, "VNC_RESOLUTION": resolution},
+			environment={"DISPLAY": ":1", "VNC_PW": g.user.auth_token, "VNC_RESOLUTION": resolution},
 			detach=True,
 			network="flowcase_default_network",
 			mem_limit=f"{droplet.container_memory}000000",
@@ -218,12 +214,12 @@ def request_new_instance():
 		container = utils.docker.docker_client.containers.run(
 			image=f"flowcaseweb/flowcase-guac:{__version__}",
 			name=name,
-			environment={"GUAC_KEY": current_user.auth_token[:32]},
+			environment={"GUAC_KEY": g.user.auth_token[:32]},
 			detach=True,
 			network="flowcase_default_network",
 		)
  
-	log("INFO", f"Instance created for user {current_user.username} with droplet {droplet.display_name}")
+	log("INFO", f"Instance created for user {g.user.username} with droplet {droplet.display_name}")
  
 	# Wait for container to start
 	time.sleep(.25)
@@ -232,7 +228,7 @@ def request_new_instance():
 	container = utils.docker.docker_client.containers.get(f"flowcase_generated_{instance.id}")
 	ip = container.attrs['NetworkSettings']['Networks']['flowcase_default_network']['IPAddress']
 	
-	authHeader = base64.b64encode(b'flowcase_user:' + current_user.auth_token.encode()).decode('utf-8')
+	authHeader = base64.b64encode(b'flowcase_user:' + g.user.auth_token.encode()).decode('utf-8')
  
 	if not isGuacDroplet:
 		nginx_config = f"""
@@ -369,13 +365,12 @@ def generate_guac_token(droplet: Droplet, user: User) -> str:
 	return encrypt_token(guac_token, user.auth_token.encode())
  
 @droplet_bp.route('/droplet/<string:instance_id>', methods=['GET'])
-@login_required
 def droplet(instance_id: str):
 	instance = DropletInstance.query.filter_by(id=instance_id).first()
 	if not instance:
 		return redirect("/")
 
-	if instance.user_id != current_user.id:
+	if instance.user_id != g.user.id:
 		return redirect("/")
 
 	using_guac = False
@@ -383,18 +378,17 @@ def droplet(instance_id: str):
 	droplet = Droplet.query.filter_by(id=instance.droplet_id).first()
 	if droplet.droplet_type in ["vnc", "rdp", "ssh"]:
 		using_guac = True
-		guac_token = generate_guac_token(Droplet.query.filter_by(id=instance.droplet_id).first(), current_user)
+		guac_token = generate_guac_token(Droplet.query.filter_by(id=instance.droplet_id).first(), g.user)
 
 	return render_template('droplet.html', instance_id=instance_id, droplet=droplet, guacamole=using_guac, guac_token=guac_token)
 
 @droplet_bp.route('/api/instance/<string:instance_id>/destroy', methods=['GET'])
-@login_required
 def stop_instance(instance_id: str):
 	instance = DropletInstance.query.filter_by(id=instance_id).first()
 	if not instance:
 		return jsonify({"success": False, "error": "Instance not found"}), 404
 
-	if instance.user_id != current_user.id:
+	if instance.user_id != g.user.id:
 		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	try:

@@ -1,8 +1,7 @@
 import platform
 import sys
 import os
-from flask import Blueprint, jsonify, request
-from flask_login import login_required, current_user
+from flask import Blueprint, jsonify, request, g
 from sqlalchemy.sql import func
 from __init__ import db, bcrypt, __version__
 from models.user import User, Group
@@ -15,9 +14,8 @@ import utils.docker
 admin_bp = Blueprint('admin', __name__)
 
 @admin_bp.route('/system_info', methods=['GET'])
-@login_required
 def api_admin_system():
-	if not Permissions.check_permission(current_user.id, Permissions.ADMIN_PANEL):
+	if not Permissions.check_permission(g.user.id, Permissions.ADMIN_PANEL):
 		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	#Get Nginx version
@@ -47,9 +45,8 @@ def api_admin_system():
 	return jsonify(response)
 
 @admin_bp.route('/users', methods=['GET'])
-@login_required
 def api_admin_users():
-	if not Permissions.check_permission(current_user.id, Permissions.VIEW_USERS):
+	if not Permissions.check_permission(g.user.id, Permissions.VIEW_USERS):
 		return jsonify({"success": False, "error": "Unauthorized"}), 403
 	
 	users = User.query.all()
@@ -79,9 +76,8 @@ def api_admin_users():
 	return jsonify(response)
 
 @admin_bp.route('/instances', methods=['GET'])
-@login_required
 def api_admin_instances():
-	if not Permissions.check_permission(current_user.id, Permissions.VIEW_INSTANCES):
+	if not Permissions.check_permission(g.user.id, Permissions.VIEW_INSTANCES):
 		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	if not utils.docker.is_docker_available():
@@ -129,9 +125,8 @@ def api_admin_instances():
 	return jsonify(response)
 
 @admin_bp.route('/droplets', methods=['GET'])
-@login_required
 def api_admin_droplets():
-	if not Permissions.check_permission(current_user.id, Permissions.VIEW_DROPLETS):
+	if not Permissions.check_permission(g.user.id, Permissions.VIEW_DROPLETS):
 		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	droplets = Droplet.query.all()
@@ -163,9 +158,8 @@ def api_admin_droplets():
 	return jsonify(response)
 
 @admin_bp.route('/droplet', methods=['POST'])
-@login_required
 def api_admin_edit_droplet():
-	if not Permissions.check_permission(current_user.id, Permissions.EDIT_DROPLETS):
+	if not Permissions.check_permission(g.user.id, Permissions.EDIT_DROPLETS):
 		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	droplet_id = request.json.get('id')
@@ -254,9 +248,8 @@ def api_admin_edit_droplet():
 	return jsonify({"success": True})
 
 @admin_bp.route('/droplet', methods=['DELETE'])
-@login_required
 def api_admin_delete_droplet():
-	if not Permissions.check_permission(current_user.id, Permissions.EDIT_DROPLETS):
+	if not Permissions.check_permission(g.user.id, Permissions.EDIT_DROPLETS):
 		return jsonify({"success": False, "error": "Unauthorized"}), 403
 	
 	droplet_id = request.json.get('id')
@@ -288,9 +281,8 @@ def api_admin_delete_droplet():
 	return jsonify({"success": True})
 
 @admin_bp.route('/instance', methods=['DELETE'])
-@login_required
 def api_admin_delete_instance():
-	if not Permissions.check_permission(current_user.id, Permissions.EDIT_INSTANCES):
+	if not Permissions.check_permission(g.user.id, Permissions.EDIT_INSTANCES):
 		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	instance_id = request.json.get('id')
@@ -311,9 +303,8 @@ def api_admin_delete_instance():
 	return jsonify({"success": True})
 
 @admin_bp.route('/user', methods=['POST'])
-@login_required
 def api_admin_edit_user():
-	if not Permissions.check_permission(current_user.id, Permissions.EDIT_USERS):
+	if not Permissions.check_permission(g.user.id, Permissions.EDIT_USERS):
 		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	user_id = request.json.get('id')
@@ -354,9 +345,8 @@ def api_admin_edit_user():
 	return jsonify({"success": True})
 
 @admin_bp.route('/user', methods=['DELETE'])
-@login_required
 def api_admin_delete_user():
-	if not Permissions.check_permission(current_user.id, Permissions.EDIT_USERS):
+	if not Permissions.check_permission(g.user.id, Permissions.EDIT_USERS):
 		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	user_id = request.json.get('id')
@@ -388,9 +378,8 @@ def api_admin_delete_user():
 	return jsonify({"success": True})
 
 @admin_bp.route('/groups', methods=['GET'])
-@login_required
 def api_admin_groups():
-	if not Permissions.check_permission(current_user.id, Permissions.VIEW_GROUPS):
+	if not Permissions.check_permission(g.user.id, Permissions.VIEW_GROUPS):
 		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	groups = Group.query.all()
@@ -423,9 +412,8 @@ def api_admin_groups():
 	return jsonify(response)
 
 @admin_bp.route('/group', methods=['POST'])
-@login_required
 def api_admin_edit_group():
-	if not Permissions.check_permission(current_user.id, Permissions.EDIT_GROUPS):
+	if not Permissions.check_permission(g.user.id, Permissions.EDIT_GROUPS):
 		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	group_id = request.json.get('id')
@@ -494,9 +482,8 @@ def api_admin_edit_group():
 	return jsonify({"success": True})
 
 @admin_bp.route('/group', methods=['DELETE'])
-@login_required
 def api_admin_delete_group():
-	if not Permissions.check_permission(current_user.id, Permissions.EDIT_GROUPS):
+	if not Permissions.check_permission(g.user.id, Permissions.EDIT_GROUPS):
 		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	group_id = request.json.get('id')
@@ -513,9 +500,8 @@ def api_admin_delete_group():
 	return jsonify({"success": True})
 
 @admin_bp.route('/registry')
-@login_required
 def api_admin_registry():
-	if not Permissions.check_permission(current_user.id, Permissions.VIEW_REGISTRY):
+	if not Permissions.check_permission(g.user.id, Permissions.VIEW_REGISTRY):
 		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	registry = Registry.query.all()
@@ -550,10 +536,9 @@ def api_admin_registry():
 	return jsonify(response)
 
 @admin_bp.route('/registry', methods=['POST', 'DELETE'])
-@login_required
 def api_admin_edit_registry():
 	if request.method == 'POST':
-		if not Permissions.check_permission(current_user.id, Permissions.EDIT_REGISTRY):
+		if not Permissions.check_permission(g.user.id, Permissions.EDIT_REGISTRY):
 			return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 		url = request.json.get('url')
@@ -572,7 +557,7 @@ def api_admin_edit_registry():
 		return jsonify({"success": True})
 
 	elif request.method == 'DELETE':
-		if not Permissions.check_permission(current_user.id, Permissions.EDIT_REGISTRY):
+		if not Permissions.check_permission(g.user.id, Permissions.EDIT_REGISTRY):
 			return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 		registry_id = request.json.get('id')
@@ -586,9 +571,8 @@ def api_admin_edit_registry():
 		return jsonify({"success": True})
 
 @admin_bp.route('/logs', methods=['GET'])
-@login_required
 def api_admin_logs():
-	if not current_user.has_permission(Permissions.ADMIN_PANEL):
+	if not g.user.has_permission(Permissions.ADMIN_PANEL):
 		return jsonify({"success": False, "error": "You do not have permission to view logs"})
 	
 	page = request.args.get('page', 1, type=int)
