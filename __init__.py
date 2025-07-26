@@ -4,6 +4,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
 __version__ = "develop"
+# This will be replaced during build with the actual commit hash
+__commit__ = "Unknown"
 
 db = SQLAlchemy()
 migrate = Migrate()
