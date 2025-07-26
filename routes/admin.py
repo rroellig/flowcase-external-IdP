@@ -1,6 +1,7 @@
 import platform
 import sys
 import os
+import subprocess
 from flask import Blueprint, jsonify, request, g
 from __init__ import db, __version__
 from models.user import User
@@ -10,6 +11,14 @@ from models.log import Log
 import utils.docker
 
 admin_bp = Blueprint('admin', __name__)
+
+def get_git_commit():
+	"""Get the current git commit hash"""
+	try:
+		commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'], stderr=subprocess.STDOUT).decode('utf-8').strip()
+		return commit_hash[:7]  # Return short hash (first 7 characters)
+	except (subprocess.CalledProcessError, FileNotFoundError):
+		return "Unknown"
 
 @admin_bp.route('/system_info', methods=['GET'])
 def api_admin_system():
@@ -35,6 +44,7 @@ def api_admin_system():
 			"python": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
 			"docker": utils.docker.get_docker_version(),
 			"nginx": nginx_version,
+			"commit": get_git_commit(),
 		},
 	}
  

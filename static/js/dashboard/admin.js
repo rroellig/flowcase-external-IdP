@@ -275,6 +275,11 @@ function AdminChangeTab(tab, element = null)
 				</div>
 
 				<div class="admin-modal-card">
+					<p>Git Commit</p>
+					<textarea readonly disabled style="resize: none;">${json["version"]["commit"]}</textarea>
+				</div>
+
+				<div class="admin-modal-card">
 					<p>Python</p>
 					<textarea readonly disabled style="resize: none;">${json["version"]["python"]}</textarea>
 				</div>
