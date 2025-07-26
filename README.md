@@ -1,5 +1,13 @@
 # <div align="center">🌊 **Flowcase**</div>
 
+## Purpose of this fork
+- use traefik as reverse proxy (https and auth forwarding)
+- use authentik as external idendity provider (IdP)
+- handle use and group management exclusively by external IdP
+- checkout development branch to see changes
+
+---
+
 <div align="center">
 
 ![Flowcase](https://img.shields.io/badge/Status-Development-yellow)
