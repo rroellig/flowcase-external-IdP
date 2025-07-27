@@ -41,8 +41,8 @@ class User():
 		groups_header = request.headers.get("X-Authentik-Groups")
 		
 		# Debug output
-		print("X-Authentik-Username: ", username)
-		print("X-Authentik-Groups: ", groups_header)
+		# print("X-Authentik-Username: ", username)
+		# print("X-Authentik-Groups: ", groups_header)
 		
 		# If no username in headers, check for debug arguments
 		if not username and args.debug_user:
