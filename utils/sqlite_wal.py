@@ -4,6 +4,7 @@ from sqlalchemy.engine import Engine
 
 class SQLiteDialect_pysqlite_wal(SQLiteDialect_pysqlite):
     name = "sqlite+pysqlite_wal"
+    supports_statement_cache = True  # Enable SQL compilation caching for better performance
 
     @classmethod
     def dbapi(cls):
