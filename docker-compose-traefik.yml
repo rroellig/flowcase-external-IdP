@@ -12,7 +12,7 @@ services:
       - --providers.file.directory=/dynamic_configs
       - --providers.file.watch=true
       - --entrypoints.websecure.address=:443
-      # - --entrypoints.postgres.address=:5432
+      # port 80 is used for ACME http challenges
       - --entrypoints.web.address=:80
       # custumize to your needs
       - --certificatesresolvers.acme-resolver.acme.email=${ADMIN_EMAIL}
@@ -29,17 +29,17 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
       - /var/run/docker.sock:/var/run/docker.sock
-      # assumes that host contains root ca for self signed certificates
+      # assumes that host contains public ca certs or root ca certs for self signed certificates
       - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
       - ./traefik/dynamic_configs:/dynamic_configs:ro
       - acme_data:/acme
     environment:
       LEGO_CA_CERTIFICATES: "/etc/ssl/certs/ca-certificates.crt"
     networks:
-      - proxy
+      - proxy_network
     restart: unless-stopped
     labels:
-      - traefik.docker.network=proxy
+      - traefik.docker.network=proxy_network
       - traefik.enable=true
       - traefik.http.routers.traefik.tls=true
       - traefik.http.routers.traefik.entrypoints=websecure
@@ -47,12 +47,11 @@ services:
       - traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN}`)
       - traefik.http.routers.traefik.tls.certresolver=acme-resolver
       - traefik.http.routers.traefik.service=api@internal
-      - traefik.http.routers.traefik.middlewares=authentik@file
+      #- traefik.http.routers.traefik.middlewares=authentik@file
 
 networks:
-  proxy:
-    name: proxy
-    external: true
+  proxy_network:
+    name: proxy_network
 
 volumes:
   acme_data:
