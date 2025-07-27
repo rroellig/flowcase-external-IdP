@@ -1,7 +1,6 @@
-from flask_login import UserMixin
-from flask import request, g
+from flask import request
 
-class User(UserMixin):
+class User():
 	"""
 	User class that gets all information from HTTP headers
 	No database storage is used for users

@@ -1,7 +1,4 @@
-from flask import Blueprint, request, redirect, url_for, render_template, make_response, g
-from __init__ import db
-from models.user import User
-from utils.logger import log
+from flask import Blueprint, redirect, url_for, render_template, make_response, g
 
 auth_bp = Blueprint('auth', __name__)
 

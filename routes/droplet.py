@@ -5,8 +5,8 @@ import base64
 import json
 import docker
 from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad, unpad
-from flask import Blueprint, jsonify, request, render_template, redirect, make_response, send_from_directory, g
+from Crypto.Util.Padding import pad
+from flask import Blueprint, jsonify, request, render_template, redirect, send_from_directory, g
 import psutil
 from __init__ import db, __version__
 from models.droplet import Droplet, DropletInstance

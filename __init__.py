@@ -1,15 +1,12 @@
-import os
-from flask import Flask, request, g
+from flask import Flask, g
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from flask_bcrypt import Bcrypt
 
 __version__ = "develop"
 
 db = SQLAlchemy()
 migrate = Migrate()
-bcrypt = Bcrypt()
 
 # Custom user class for auto-login
 class AutoLoginUser:
@@ -39,7 +36,6 @@ def create_app(config=None):
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
     db.init_app(app)
     migrate.init_app(app, db)
-    bcrypt.init_app(app)
     
     # Auto-login middleware
     @app.before_request

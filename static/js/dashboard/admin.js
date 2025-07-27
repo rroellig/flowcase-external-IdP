@@ -544,8 +544,6 @@ function FetchAdminInstances(callback)
 	console.log("Retrieving instances...");
 }
 
-// Group management removed - users come from IdP via HTTP headers
-
 function FetchAdminRegistry(callback)
 {
 	var url = "/api/admin/registry";
@@ -644,34 +642,6 @@ function AdminDeleteRegistry(registry_id)
 	xhr.send(data);
 
 	console.log("Deleting registry...");
-}
-
-// User management removed - users come from IdP via HTTP headers
-function ShowEditUser(user_id = null) {
-    // Stub function to prevent errors
-    console.log("User management removed - users come from IdP via HTTP headers");
-    return;
-}
-
-// User management removed - users come from IdP via HTTP headers
-function SaveUser(user_id = null) {
-    // Stub function to prevent errors
-    console.log("User management removed - users come from IdP via HTTP headers");
-    return;
-}
-
-// User management removed - users come from IdP via HTTP headers
-function AdminDeleteUser(user_id) {
-    // Stub function to prevent errors
-    console.log("User management removed - users come from IdP via HTTP headers");
-    return;
-}
-
-// Group management removed - users come from IdP via HTTP headers
-function AdminDeleteGroup(group_id) {
-    // Stub function to prevent errors
-    console.log("Group management removed - users come from IdP via HTTP headers");
-    return;
 }
 
 function ShowEditDropletRegistry(display_name, description, image_path, container_docker_registry, container_docker_image, selected_tag)

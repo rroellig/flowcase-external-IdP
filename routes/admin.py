@@ -2,7 +2,6 @@ import platform
 import sys
 import os
 from flask import Blueprint, jsonify, request, g
-from sqlalchemy.sql import func
 from __init__ import db, __version__
 from models.user import User
 from models.droplet import Droplet, DropletInstance
@@ -366,8 +365,6 @@ def api_admin_edit_registry():
 
 @admin_bp.route('/logs', methods=['GET'])
 def api_admin_logs():
-	if not g.user.has_permission(Permissions.ADMIN_PANEL):
-		return jsonify({"success": False, "error": "You do not have permission to view logs"})
 	
 	page = request.args.get('page', 1, type=int)
 	per_page = request.args.get('per_page', 50, type=int)

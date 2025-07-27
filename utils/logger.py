@@ -1,4 +1,3 @@
-import time
 from __init__ import db
 
 def log(level: str, message: str):
