@@ -44,7 +44,11 @@
                     {% if current_user.has_permission("perm_admin_panel") %}
                     <a href="#" onclick="OpenAdminPanel()"><i class="fas fa-cogs"></i> Admin</a>
                     {% endif %}
-                    <span class="user-link"><i class="fas fa-user"></i> {{ current_user.username }}</span>
+                    <a href="#" class="user-link"><i class="fas fa-user"></i> {{ current_user.username }}</a>
+                    <div class="user-dropdown">
+                        <a href="https://authentik.{{ request.host.split(':')[0] }}/flows/-/default/invalidation/"><i class="fas fa-sign-out-alt"></i>Logout</a>
+                    </div>
+
                 </div>
             </nav>
             <div class="content">
@@ -115,8 +119,10 @@
         {% endif %}
     </body>
     <script>
-        // No user dropdown needed
-    </script>
+        //user dropdown
+        document.querySelectorAll('.user-link')[0].addEventListener('click', () => {
+            document.querySelectorAll('.user-dropdown')[0].classList.toggle('active');
+        });    </script>
     <script>
         //Retrieve stats/droplets/instances from the server and update the UI
 
