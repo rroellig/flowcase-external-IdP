@@ -1,7 +1,5 @@
-import random
-import string
 from flask import Blueprint, request, redirect, url_for, render_template, make_response, g
-from __init__ import db, bcrypt
+from __init__ import db
 from models.user import User
 from utils.logger import log
 
@@ -20,12 +18,3 @@ def dashboard():
 def droplet_connect():
     # Always allow connection
     return make_response("", 200)
-
-def generate_auth_token() -> str:
-    return ''.join(random.choice(string.ascii_letters + string.digits) for i in range(80))
-
-def create_user(username, groups):
-    user = User(username=username, groups=groups, auth_token=generate_auth_token())
-    db.session.add(user)
-    db.session.commit()
-    return user

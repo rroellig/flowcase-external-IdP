@@ -26,6 +26,9 @@ class AutoLoginUser:
     @property
     def is_active(self):
         return True
+        
+    def get_groups(self):
+        return self.user.get_groups()
 
 def create_app(config=None):
     app = Flask(__name__)
@@ -43,18 +46,11 @@ def create_app(config=None):
     def auto_login():
         from models.user import User
         
-        # Check if X-authentik-username header is present
-        username = request.headers.get("X-authentik-username")
-        
-        # For now, always use admin user
-        if not username:
-            username = "admin"
-            
-        # Get the admin user
-        user = User.query.filter_by(username=username).first()
-        if user:
-            # Set current_user to admin
-            g.user = AutoLoginUser(user)
+        # Get user from HTTP headers
+        user = User.get_current_user()
+                
+        # Set current user
+        g.user = AutoLoginUser(user)
     
     # Register blueprints
     from routes.auth import auth_bp

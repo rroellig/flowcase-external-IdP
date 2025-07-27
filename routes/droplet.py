@@ -45,7 +45,7 @@ def get_droplets():
 
 @droplet_bp.route('/api/instances', methods=['GET'])
 def get_instances():
-	instances = DropletInstance.query.filter_by(user_id=g.user.id).all()
+	instances = DropletInstance.query.filter_by(username=g.user.username).all()
  
 	response = {
 		"success": True,
@@ -152,7 +152,7 @@ def request_new_instance():
 		return jsonify({"success": False, "error": "Docker image not found. Image might still be downloading."}), 400
 
 	# Create a new instance
-	instance = DropletInstance(droplet_id=droplet_id, user_id=g.user.id)
+	instance = DropletInstance(droplet_id=droplet_id, username=g.user.username)
 	db.session.add(instance)
 	db.session.commit()
  
@@ -370,7 +370,7 @@ def droplet(instance_id: str):
 	if not instance:
 		return redirect("/")
 
-	if instance.user_id != g.user.id:
+	if instance.username != g.user.username:
 		return redirect("/")
 
 	using_guac = False
@@ -388,7 +388,7 @@ def stop_instance(instance_id: str):
 	if not instance:
 		return jsonify({"success": False, "error": "Instance not found"}), 404
 
-	if instance.user_id != g.user.id:
+	if instance.username != g.user.username:
 		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	try:

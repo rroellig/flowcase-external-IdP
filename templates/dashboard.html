@@ -87,16 +87,7 @@
                     <a href="#" class="admin-modal-sidebar-button" onclick="AdminChangeTab('system', this)">
                         <i class="fas fa-cogs"></i>System
                     </a>
-                    {% if current_user.has_permission("perm_view_users") %}
-                    <a href="#" class="admin-modal-sidebar-button" onclick="AdminChangeTab('users', this)">
-                        <i class="fas fa-user"></i>Users
-                    </a>
-                    {% endif %}
-                    {% if current_user.has_permission("perm_view_groups") %}
-                    <a href="#" class="admin-modal-sidebar-button" onclick="AdminChangeTab('groups', this)">
-                        <i class="fas fa-users"></i>Groups
-                    </a>
-                    {% endif %}
+                    <!-- User and group management removed - users come from IdP via HTTP headers -->
                     {% if current_user.has_permission("perm_view_droplets") %}
                     <a href="#" class="admin-modal-sidebar-button" onclick="AdminChangeTab('droplets', this)">
                         <i class="fas fa-server"></i>Droplets

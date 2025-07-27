@@ -21,6 +21,6 @@ class Droplet(db.Model):
 class DropletInstance(db.Model):
 	id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
 	droplet_id = db.Column(db.String(36), db.ForeignKey('droplet.id'), nullable=False)
-	user_id = db.Column(db.String(36), db.ForeignKey('user.id'), nullable=False)
+	username = db.Column(db.String(80), nullable=False)  # Store username directly instead of foreign key
 	created_at = db.Column(db.DateTime, server_default=func.now())
-	updated_at = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now()) 
+	updated_at = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())

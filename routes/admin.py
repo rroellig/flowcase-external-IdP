@@ -4,7 +4,7 @@ import os
 from flask import Blueprint, jsonify, request, g
 from sqlalchemy.sql import func
 from __init__ import db, __version__
-from models.user import User, Group
+from models.user import User
 from models.droplet import Droplet, DropletInstance
 from models.registry import Registry
 from models.log import Log
@@ -49,29 +49,16 @@ def api_admin_users():
 	if not Permissions.check_permission(g.user.id, Permissions.VIEW_USERS):
 		return jsonify({"success": False, "error": "Unauthorized"}), 403
 	
-	users = User.query.all()
- 
+	# Only return the current user since users are not stored in the database
 	response = {
 		"success": True,
-		"users": []
+		"users": [{
+			"id": g.user.id,
+			"username": g.user.username,
+			"is_admin": g.user.is_admin
+		}],
+		"note": "Users are managed via IdP and retrieved from HTTP headers"
 	}
- 
-	for user in users:
-		response["users"].append({
-			"id": user.id,
-			"username": user.username,
-			"created_at": user.created_at,
-			"groups": []
-		})
-		
-		user_groups = user.groups.split(",")
-		groups = Group.query.all()
-		for group in groups:
-			if group.id in user_groups:
-				response["users"][-1]["groups"].append({
-					"id": group.id,
-					"display_name": group.display_name
-				})
  
 	return jsonify(response)
 
@@ -96,7 +83,7 @@ def api_admin_instances():
 	for instance in instances:
 		try:
 			droplet = Droplet.query.filter_by(id=instance.droplet_id).first()
-			user = User.query.filter_by(id=instance.user_id).first()
+			user = User(username=instance.username)  # Create User object from username
 			container = utils.docker.docker_client.containers.get(f"flowcase_generated_{instance.id}")
 			response["instances"].append({
 				"id": instance.id,
@@ -302,199 +289,9 @@ def api_admin_delete_instance():
  
 	return jsonify({"success": True})
 
-@admin_bp.route('/user', methods=['POST'])
-def api_admin_edit_user():
-	if not Permissions.check_permission(g.user.id, Permissions.EDIT_USERS):
-		return jsonify({"success": False, "error": "Unauthorized"}), 403
+# User management routes removed - users are now managed via IdP
 
-	user_id = request.json.get('id')
-	user = User.query.filter_by(id=user_id).first()
- 
-	create_new = False
-	if not user or user_id == "null":
-		create_new = True
-		user = User()
-  
-	# Validate input
-	user.username = request.json.get('username')
-	if not user.username:
-		return jsonify({"success": False, "error": "Username is required"}), 400
-	if " " in user.username:
-		return jsonify({"success": False, "error": "Username cannot contain spaces"}), 400
-
-	groups_string = ""
-	for group in request.json.get('groups'):
-		groups_string += f'{group},'
-	user.groups = groups_string[:-1]
-	if not user.groups or user.groups == "" or user.groups == "]":
-		return jsonify({"success": False, "error": "Groups are required"}), 400
-
-	# No password required for new users
-	if create_new:
-		from routes.auth import generate_auth_token
-		user.auth_token = generate_auth_token()
- 
-	if create_new:
-		db.session.add(user)
- 
-	db.session.commit()
- 
-	return jsonify({"success": True})
-
-@admin_bp.route('/user', methods=['DELETE'])
-def api_admin_delete_user():
-	if not Permissions.check_permission(g.user.id, Permissions.EDIT_USERS):
-		return jsonify({"success": False, "error": "Unauthorized"}), 403
-
-	user_id = request.json.get('id')
-	user = User.query.filter_by(id=user_id).first()
-	if not user:
-		return jsonify({"success": False, "error": "User not found"}), 404
- 
-	db.session.delete(user)
-	db.session.commit()
- 
-	# Delete any instances of this user
-	instances = DropletInstance.query.filter_by(user_id=user_id).all()
-	
-	if utils.docker.is_docker_available():
-		for instance in instances:
-			try:
-				container = utils.docker.docker_client.containers.get(f"flowcase_generated_{instance.id}")
-				container.remove(force=True)
-			except Exception as e:
-				pass  # Container might not exist
-			db.session.delete(instance)
-			db.session.commit()
-	else:
-		# Even if Docker is not available, we should still delete the DB records
-		for instance in instances:
-			db.session.delete(instance)
-		db.session.commit()
- 
-	return jsonify({"success": True})
-
-@admin_bp.route('/groups', methods=['GET'])
-def api_admin_groups():
-	if not Permissions.check_permission(g.user.id, Permissions.VIEW_GROUPS):
-		return jsonify({"success": False, "error": "Unauthorized"}), 403
-
-	groups = Group.query.all()
- 
-	response = {
-		"success": True,
-		"groups": []
-	}
- 
-	for group in groups:
-		response["groups"].append({
-			"id": group.id,
-			"display_name": group.display_name,
-			"protected": group.protected,
-			"permissions": {
-				"admin_panel": group.perm_admin_panel,
-				"view_instances": group.perm_view_instances,
-				"edit_instances": group.perm_edit_instances,
-				"view_users": group.perm_view_users,
-				"edit_users": group.perm_edit_users,
-				"view_droplets": group.perm_view_droplets,
-				"edit_droplets": group.perm_edit_droplets,
-				"view_registry": group.perm_view_registry,
-				"edit_registry": group.perm_edit_registry,
-				"view_groups": group.perm_view_groups,
-				"edit_groups": group.perm_edit_groups
-			}
-		})
- 
-	return jsonify(response)
-
-@admin_bp.route('/group', methods=['POST'])
-def api_admin_edit_group():
-	if not Permissions.check_permission(g.user.id, Permissions.EDIT_GROUPS):
-		return jsonify({"success": False, "error": "Unauthorized"}), 403
-
-	group_id = request.json.get('id')
-	group = Group.query.filter_by(id=group_id).first()
- 
-	create_new = False
-	if not group or group_id == "null":
-		create_new = True
-		group = Group()
-		group.protected = False
-	
-	# Validate input
-	group.display_name = request.json.get('display_name')
-	if not group.display_name:
-		return jsonify({"success": False, "error": "Display Name is required"}), 400
- 
-	group.perm_admin_panel = request.json.get('perm_admin_panel')
-	if not group.perm_admin_panel:
-		group.perm_admin_panel = False
- 
-	group.perm_view_instances = request.json.get('perm_view_instances')
-	if not group.perm_view_instances:
-		group.perm_view_instances = False
- 
-	group.perm_edit_instances = request.json.get('perm_edit_instances')
-	if not group.perm_edit_instances:
-		group.perm_edit_instances = False
- 
-	group.perm_view_users = request.json.get('perm_view_users')
-	if not group.perm_view_users:
-		group.perm_view_users = False
- 
-	group.perm_edit_users = request.json.get('perm_edit_users')
-	if not group.perm_edit_users:
-		group.perm_edit_users = False
- 
-	group.perm_view_droplets = request.json.get('perm_view_droplets')
-	if not group.perm_view_droplets:
-		group.perm_view_droplets = False
- 
-	group.perm_edit_droplets = request.json.get('perm_edit_droplets')
-	if not group.perm_edit_droplets:
-		group.perm_edit_droplets = False
-  
-	group.perm_view_registry = request.json.get('perm_view_registry')
-	if not group.perm_view_registry:
-		group.perm_view_registry = False
-  
-	group.perm_edit_registry = request.json.get('perm_edit_registry')
-	if not group.perm_edit_registry:
-		group.perm_edit_registry = False
- 
-	group.perm_view_groups = request.json.get('perm_view_groups')
-	if not group.perm_view_groups:
-		group.perm_view_groups = False
- 
-	group.perm_edit_groups = request.json.get('perm_edit_groups')
-	if not group.perm_edit_groups:
-		group.perm_edit_groups = False
- 
-	if create_new:
-		db.session.add(group)
- 
-	db.session.commit()
- 
-	return jsonify({"success": True})
-
-@admin_bp.route('/group', methods=['DELETE'])
-def api_admin_delete_group():
-	if not Permissions.check_permission(g.user.id, Permissions.EDIT_GROUPS):
-		return jsonify({"success": False, "error": "Unauthorized"}), 403
-
-	group_id = request.json.get('id')
-	group = Group.query.filter_by(id=group_id).first()
-	if not group:
-		return jsonify({"success": False, "error": "Group not found."}), 404
- 
-	if group.protected:
-		return jsonify({"success": False, "error": "This group is protected. Protected groups cannot be deleted."}), 400
- 
-	db.session.delete(group)
-	db.session.commit()
- 
-	return jsonify({"success": True})
+# Group management endpoints removed - simplified permission scheme
 
 @admin_bp.route('/registry')
 def api_admin_registry():
