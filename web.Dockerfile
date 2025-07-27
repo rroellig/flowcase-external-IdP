@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-# Add build argument for commit hash
+# Add build arguments
 ARG COMMIT_HASH=Unknown
 
 WORKDIR /flowcase

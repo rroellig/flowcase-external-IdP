@@ -18,7 +18,7 @@ def get_git_commit():
 	if __commit__ != "Unknown":
 		return __commit__[:7] if len(__commit__) >= 7 else __commit__
 	
-	# If that fails, try to get it directly using Git commands
+	# If that fails, try to get it directly using Git commands, for local development in venv
 	try:
 		commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'], stderr=subprocess.STDOUT).decode('utf-8').strip()
 		return commit_hash[:7]  # Return short hash (first 7 characters)
@@ -38,6 +38,9 @@ def api_admin_system():
 	except:
 		nginx_version = "Unable to get version"
 
+	# Get git commit
+	commit = get_git_commit()
+	
 	response = {
 		"success": True,
 		"system": {
@@ -49,7 +52,7 @@ def api_admin_system():
 			"python": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
 			"docker": utils.docker.get_docker_version(),
 			"nginx": nginx_version,
-			"commit": get_git_commit(),
+			"commit": commit,
 		},
 	}
  

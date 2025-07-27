@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Get the commit hash from the build argument
+# Get the build arguments
 COMMIT_HASH=$1
 
 if [ -z "$COMMIT_HASH" ]; then
@@ -8,7 +8,8 @@ if [ -z "$COMMIT_HASH" ]; then
   COMMIT_HASH="Unknown"
 fi
 
-# Update the __init__.py file with the commit hash
+# Update the __init__.py file with the values
 sed -i "s/__commit__ = \".*\"/__commit__ = \"$COMMIT_HASH\"/" /flowcase/__init__.py
 
-echo "Injected commit hash: $COMMIT_HASH into __init__.py"
+echo "Injected values into __init__.py:"
+echo "  Commit hash: $COMMIT_HASH"
