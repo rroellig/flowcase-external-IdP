@@ -1,18 +1,19 @@
-from flask import request
+from flask import request, abort
+from config.config import parse_args
 
 class User():
 	"""
 	User class that gets all information from HTTP headers
 	No database storage is used for users
 	"""
-	def __init__(self, username, is_admin=False):
+	def __init__(self, username, groups):
 		self.id = username  # Use username as ID
 		self.username = username
-		self.is_admin = is_admin
+		self.groups = groups if groups else []
 	
 	def has_permission(self, permission):
 		# Admin can do everything
-		if self.is_admin:
+		if 'admin' in self.groups:
 			return True
 		
 		# Non-admins can only view droplets and instances
@@ -24,26 +25,43 @@ class User():
 	def get_groups(self):
 		"""
 		Return a list of groups for compatibility with templates
-		In the simplified model, we just return 'admin' or 'user' based on is_admin
 		"""
-		if self.is_admin:
-			return ['admin']
-		else:
-			return ['user']
+		return self.groups
 	
 	@staticmethod
 	def get_current_user():
-		"""Get user from HTTP headers"""
-		username = request.headers.get("X-authentik-username")
+		"""
+		Get user and groups from HTTP headers or debug arguments
+		"""
+		# Get command line arguments
+		args = parse_args()
 		
-		# Default to admin if no header is present
-		if not username:
-			username = "admin"
+		# Check for headers first
+		username = request.headers.get("X-Authentik-Username")
+		groups_header = request.headers.get("X-Authentik-Groups")
 		
-		# Check if user is admin from header
-		is_admin = request.headers.get("X-authentik-is-admin", "false").lower() == "true"
-		# Default admin user is always admin
-		if username == "admin":
-			is_admin = True
+		# Debug output
+		print("X-Authentik-Username: ", username)
+		print("X-Authentik-Groups: ", groups_header)
+		
+		# If no username in headers, check for debug arguments
+		if not username and args.debug_user:
+			print(f"Using debug username: {args.debug_user}")
+			username = args.debug_user
 			
-		return User(username=username, is_admin=is_admin)
+			# Use debug groups if provided
+			if args.debug_groups:
+				groups_header = args.debug_groups
+				print(f"Using debug groups: {groups_header}")
+		
+		# If still no username, abort with 401
+		if not username:
+			abort(401)
+
+		# Parse groups from header or debug argument
+		groups = []
+		if groups_header:
+			# Split by comma and strip whitespace
+			groups = [group.strip() for group in groups_header.split('|')]
+			
+		return User(username=username, groups=groups)

@@ -7,6 +7,8 @@ def parse_args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--port', type=int, default=5000)
 	parser.add_argument('--debug', action='store_true')
+	parser.add_argument('--debug-user', type=str, help='Username to use when running locally without Authentik')
+	parser.add_argument('--debug-groups', type=str, help='Comma-separated list of groups to use when running locally without Authentik (e.g. "admin,users")')
 	
 	return parser.parse_known_args()[0]
 
