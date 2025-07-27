@@ -54,20 +54,18 @@ def create_default_users():
 		admin_groups = f"{admin_group.id},{user_group.id}"
 		user_groups = f"{user_group.id}"
 		
-		admin_random_password = ''.join(random.choice(string.ascii_letters + string.digits) for i in range(16))
-		create_user("admin", admin_random_password, admin_groups)
-		
-		user_random_password = ''.join(random.choice(string.ascii_letters + string.digits) for i in range(16))
-		create_user("user", user_random_password, user_groups)
+		# Create default users without passwords
+		create_user("admin", admin_groups)
+		create_user("user", user_groups)
 
 		print()
 		print("Created default users:")
 		print("-----------------------")
 		print("Username: admin")
-		print(f"Password: {admin_random_password}")
+		print(f"Password: managed by external idendity provider")
 		print("-----------------------")
 		print("Username: user")
-		print(f"Password: {user_random_password}")
+		print(f"Password: managed by external idendity provider")
 		print("-----------------------")
 		print()
 

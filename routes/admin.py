@@ -3,7 +3,7 @@ import sys
 import os
 from flask import Blueprint, jsonify, request, g
 from sqlalchemy.sql import func
-from __init__ import db, bcrypt, __version__
+from __init__ import db, __version__
 from models.user import User, Group
 from models.droplet import Droplet, DropletInstance
 from models.registry import Registry
@@ -329,12 +329,9 @@ def api_admin_edit_user():
 	if not user.groups or user.groups == "" or user.groups == "]":
 		return jsonify({"success": False, "error": "Groups are required"}), 400
 
-	# Passwords can only be set, not changed
+	# No password required for new users
 	if create_new:
-		if not request.json.get('password'):
-			return jsonify({"success": False, "error": "Password is required"}), 400
 		from routes.auth import generate_auth_token
-		user.password = bcrypt.generate_password_hash(request.json.get('password')).decode('utf-8')
 		user.auth_token = generate_auth_token()
  
 	if create_new:

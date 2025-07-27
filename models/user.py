@@ -7,7 +7,6 @@ from utils.permissions import Permissions
 class User(UserMixin, db.Model):
 	id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
 	username = db.Column(db.String(80), unique=True, nullable=False)
-	password = db.Column(db.String(80), nullable=False)
 	auth_token = db.Column(db.String(80), nullable=False)
 	created_at = db.Column(db.DateTime, server_default=func.now())
 	groups = db.Column(db.String(255), nullable=False)

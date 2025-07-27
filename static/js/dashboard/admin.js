@@ -804,12 +804,7 @@ function ShowEditUser(user_id = null)
 		<input type="text" id="admin-edit-user-username" value="${ user_id != null ? admin_users.find(user => user.id == user_id).username : "" }" autocomplete="off">
 	</div>
 
-	${user_id == null ? `
-	<div class="admin-modal-card">
-		<p>Password <span class="required">*</span></p>
-		<input type="password" id="admin-edit-user-password" autocomplete="new-password">
-	</div> 
-	` : ""}
+	<!-- No password field needed -->
 
 	<div class="admin-modal-card">
 		<p>Groups <span class="required">*</span></p>
@@ -836,9 +831,9 @@ function SaveUser(user_id = null)
 			if (json["success"] == true) {
 				CreateNotification("User saved successfully.", "success");
 
-				//Logout if the current user is edited
+				//Refresh page if the current user is edited
 				if (user_id == userInfo.id) {
-					window.location.href = "/logout";
+					window.location.reload();
 				}
 				
 				//Update users
@@ -860,7 +855,6 @@ function SaveUser(user_id = null)
 	var data = JSON.stringify({
 		"id": user_id,
 		"username": document.getElementById('admin-edit-user-username').value,
-		"password": user_id == "null" ? document.getElementById('admin-edit-user-password').value : "",
 		"groups": Array.from(document.getElementById('admin-edit-user-groups').selectedOptions).map(option => option.value)
 	});
 	xhr.send(data);
@@ -886,7 +880,7 @@ function AdminDeleteUser(user_id)
 
 				//Logout if the current user is deleted
 				if (user_id == userInfo.id) {
-					window.location.href = "/logout";
+					window.location.reload();
 				}
 
 				//Update users
