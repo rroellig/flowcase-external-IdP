@@ -14,6 +14,11 @@ from models.user import User
 from utils.logger import log
 import utils.docker
 
+# Fixed token for authentication and encryption
+# This should be a secure random string in a production environment
+# Seems good enough if behind traefik + authentik
+FIXED_AUTH_TOKEN = "flowcase_fixed_secure_token_for_authentication_and_encryption"
+
 droplet_bp = Blueprint('droplet', __name__)
 
 @droplet_bp.route('/api/droplets', methods=['GET'])
@@ -203,7 +208,7 @@ def request_new_instance():
 		container = utils.docker.docker_client.containers.run(
 			image=image_name,
 			name=name,
-			environment={"DISPLAY": ":1", "VNC_PW": g.user.auth_token, "VNC_RESOLUTION": resolution},
+			environment={"DISPLAY": ":1", "VNC_PW": FIXED_AUTH_TOKEN, "VNC_RESOLUTION": resolution},
 			detach=True,
 			network="flowcase_default_network",
 			mem_limit=f"{droplet.container_memory}000000",
@@ -214,7 +219,7 @@ def request_new_instance():
 		container = utils.docker.docker_client.containers.run(
 			image=f"flowcaseweb/flowcase-guac:{__version__}",
 			name=name,
-			environment={"GUAC_KEY": g.user.auth_token[:32]},
+			environment={"GUAC_KEY": FIXED_AUTH_TOKEN[:32]},
 			detach=True,
 			network="flowcase_default_network",
 		)
@@ -228,7 +233,7 @@ def request_new_instance():
 	container = utils.docker.docker_client.containers.get(f"flowcase_generated_{instance.id}")
 	ip = container.attrs['NetworkSettings']['Networks']['flowcase_default_network']['IPAddress']
 	
-	authHeader = base64.b64encode(b'flowcase_user:' + g.user.auth_token.encode()).decode('utf-8')
+	authHeader = base64.b64encode(b'flowcase_user:' + FIXED_AUTH_TOKEN.encode()).decode('utf-8')
  
 	if not isGuacDroplet:
 		nginx_config = f"""
@@ -341,9 +346,9 @@ def generate_guac_token(droplet: Droplet, user: User) -> str:
 		},
 	}
  
-	def encrypt_token(token, auth_token):
+	def encrypt_token(token):
 		iv = os.urandom(16)  # 16 bytes for AES
-		auth_token = auth_token[:32]
+		auth_token = FIXED_AUTH_TOKEN[:32].encode()
 		cipher = AES.new(auth_token, AES.MODE_CBC, iv)
   
 		# Convert value to JSON and pad it
@@ -362,7 +367,7 @@ def generate_guac_token(droplet: Droplet, user: User) -> str:
 		json_data = json.dumps(data)
 		return base64.b64encode(json_data.encode()).decode('utf-8')
 
-	return encrypt_token(guac_token, user.auth_token.encode())
+	return encrypt_token(guac_token)
  
 @droplet_bp.route('/droplet/<string:instance_id>', methods=['GET'])
 def droplet(instance_id: str):
