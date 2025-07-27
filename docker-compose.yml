@@ -19,6 +19,24 @@ services:
       - default_network
     command: python run.py
 
+  web-headers:
+    build:
+      context: .
+      dockerfile: web.Dockerfile
+    image: flowcaseweb/flowcase
+    container_name: flowcase-web
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - FLASK_APP=run_headers.py
+      - FLASK_DEBUG=0
+    ports:
+      - "5001"
+    networks:
+      - default_network
+    command: python run_headers.py
+
   nginx:
     image: nginx:1.28-alpine
     container_name: flowcase-nginx
