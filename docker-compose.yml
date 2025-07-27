@@ -20,7 +20,7 @@ services:
       - FLASK_APP=run.py
       - FLASK_DEBUG=0
     networks:
-      - default_flowcase_network
+      - flowcase_network
     command: python run.py --debug-user=admin --debug-groups=admin
 
   web-headers:
@@ -36,7 +36,7 @@ services:
       - FLASK_APP=run_headers.py
       - FLASK_DEBUG=0
     networks:
-      - default_flowcase_network
+      - flowcase_network
     command: python run_headers.py
 
   nginx:
@@ -60,11 +60,11 @@ services:
       # - traefik.http.routers.flowcase.middlewares=authentik@file
       - traefik.docker.network=proxy_network
     networks:
-      - default_flowcase_network
+      - flowcase_network
       - proxy_network
 
 networks:
-  default_flowcase_network:
+  flowcase_network:
     driver: bridge
 
 volumes:
