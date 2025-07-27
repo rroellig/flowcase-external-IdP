@@ -1,7 +1,14 @@
 FROM python:3.11-slim
 
+# Add build arguments
+ARG COMMIT_HASH=Unknown
+
 WORKDIR /flowcase
 ADD . /flowcase
+
+# Make the inject script executable and run it
+RUN chmod +x /flowcase/build_scripts/inject_commit.sh && \
+    /flowcase/build_scripts/inject_commit.sh ${COMMIT_HASH}
 
 # Install system dependencies including Docker CLI
 RUN apt-get update && \
