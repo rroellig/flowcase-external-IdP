@@ -14,11 +14,10 @@ if __name__ == '__main__':
 	
 	docker_client = init_docker()
 	if not docker_client:
-		print("Failed to initialize Docker client")
-		exit(1)
-	
-	cleanup_containers()
-	start_image_pull_thread(app)
+		print("Warning: Failed to initialize Docker client. Running droplets will be unavailable.")
+	else:
+		cleanup_containers()
+		start_image_pull_thread(app)
 	
 	print(f"Starting server on port {args.port}")
-	app.run(host="0.0.0.0", debug=args.debug, port=5000) 
+	app.run(host="0.0.0.0", debug=args.debug, port=args.port)
