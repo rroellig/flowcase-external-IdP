@@ -1,36 +1,49 @@
-import uuid
-from flask_login import UserMixin
-from sqlalchemy.sql import func
-from __init__ import db
-from utils.permissions import Permissions
+from flask import request
 
-class User(UserMixin, db.Model):
-	id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-	username = db.Column(db.String(80), unique=True, nullable=False)
-	password = db.Column(db.String(80), nullable=False)
-	auth_token = db.Column(db.String(80), nullable=False)
-	created_at = db.Column(db.DateTime, server_default=func.now())
-	groups = db.Column(db.String(255), nullable=False)
+class User():
+	"""
+	User class that gets all information from HTTP headers
+	No database storage is used for users
+	"""
+	def __init__(self, username, is_admin=False):
+		self.id = username  # Use username as ID
+		self.username = username
+		self.is_admin = is_admin
 	
 	def has_permission(self, permission):
-		return Permissions.check_permission(self.id, permission)
-
+		# Admin can do everything
+		if self.is_admin:
+			return True
+		
+		# Non-admins can only view droplets and instances
+		if permission in ["perm_view_droplets", "perm_view_instances"]:
+			return True
+			
+		return False
+	
 	def get_groups(self):
-		return self.groups.split(',')
- 
-class Group(db.Model):
-	id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-	display_name = db.Column(db.String(80), nullable=False)
-	created_at = db.Column(db.DateTime, server_default=func.now())
-	protected = db.Column(db.Boolean, nullable=False) #Protected groups cannot be deleted
-	perm_admin_panel = db.Column(db.Boolean, nullable=False)
-	perm_view_instances = db.Column(db.Boolean, nullable=False)
-	perm_edit_instances = db.Column(db.Boolean, nullable=False)
-	perm_view_users = db.Column(db.Boolean, nullable=False)
-	perm_edit_users = db.Column(db.Boolean, nullable=False)
-	perm_view_droplets = db.Column(db.Boolean, nullable=False)
-	perm_edit_droplets = db.Column(db.Boolean, nullable=False)
-	perm_view_registry = db.Column(db.Boolean, nullable=False)
-	perm_edit_registry = db.Column(db.Boolean, nullable=False)
-	perm_view_groups = db.Column(db.Boolean, nullable=False)
-	perm_edit_groups = db.Column(db.Boolean, nullable=False) 
+		"""
+		Return a list of groups for compatibility with templates
+		In the simplified model, we just return 'admin' or 'user' based on is_admin
+		"""
+		if self.is_admin:
+			return ['admin']
+		else:
+			return ['user']
+	
+	@staticmethod
+	def get_current_user():
+		"""Get user from HTTP headers"""
+		username = request.headers.get("X-authentik-username")
+		
+		# Default to admin if no header is present
+		if not username:
+			username = "admin"
+		
+		# Check if user is admin from header
+		is_admin = request.headers.get("X-authentik-is-admin", "false").lower() == "true"
+		# Default admin user is always admin
+		if username == "admin":
+			is_admin = True
+			
+		return User(username=username, is_admin=is_admin)

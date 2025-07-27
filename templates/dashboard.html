@@ -13,6 +13,7 @@
 
         <!-- User Information -->
         <script>
+            // User info is set directly without login
             var userInfo = {
                 "id": "{{ current_user.id }}",
                 "username": "{{ current_user.username }}",
@@ -25,14 +26,10 @@
                     "perm_admin_panel": {{ 'true' if current_user.has_permission("perm_admin_panel") else 'false' }},
                     "perm_view_instances": {{ 'true' if current_user.has_permission("perm_view_instances") else 'false' }},
                     "perm_edit_instances": {{ 'true' if current_user.has_permission("perm_edit_instances") else 'false' }},
-                    "perm_view_users": {{ 'true' if current_user.has_permission("perm_view_users") else 'false' }},
-                    "perm_edit_users": {{ 'true' if current_user.has_permission("perm_edit_users") else 'false' }},
                     "perm_view_droplets": {{ 'true' if current_user.has_permission("perm_view_droplets") else 'false' }},
                     "perm_edit_droplets": {{ 'true' if current_user.has_permission("perm_edit_droplets") else 'false' }},
                     "perm_view_registry": {{ 'true' if current_user.has_permission("perm_view_registry") else 'false' }},
                     "perm_edit_registry": {{ 'true' if current_user.has_permission("perm_edit_registry") else 'false' }},
-                    "perm_view_groups": {{ 'true' if current_user.has_permission("perm_view_groups") else 'false' }},
-                    "perm_edit_groups": {{ 'true' if current_user.has_permission("perm_edit_groups") else 'false' }},
                 }
             };
         </script>
@@ -47,10 +44,7 @@
                     {% if current_user.has_permission("perm_admin_panel") %}
                     <a href="#" onclick="OpenAdminPanel()"><i class="fas fa-cogs"></i> Admin</a>
                     {% endif %}
-                    <a href="#" class="user-link"><i class="fas fa-user"></i> {{ current_user.username }}</a>
-                    <div class="user-dropdown">
-                        <a href="/logout"><i class="fas fa-sign-out-alt"></i>Logout</a>
-                    </div>
+                    <span class="user-link"><i class="fas fa-user"></i> {{ current_user.username }}</span>
                 </div>
             </nav>
             <div class="content">
@@ -89,16 +83,6 @@
                     <a href="#" class="admin-modal-sidebar-button" onclick="AdminChangeTab('system', this)">
                         <i class="fas fa-cogs"></i>System
                     </a>
-                    {% if current_user.has_permission("perm_view_users") %}
-                    <a href="#" class="admin-modal-sidebar-button" onclick="AdminChangeTab('users', this)">
-                        <i class="fas fa-user"></i>Users
-                    </a>
-                    {% endif %}
-                    {% if current_user.has_permission("perm_view_groups") %}
-                    <a href="#" class="admin-modal-sidebar-button" onclick="AdminChangeTab('groups', this)">
-                        <i class="fas fa-users"></i>Groups
-                    </a>
-                    {% endif %}
                     {% if current_user.has_permission("perm_view_droplets") %}
                     <a href="#" class="admin-modal-sidebar-button" onclick="AdminChangeTab('droplets', this)">
                         <i class="fas fa-server"></i>Droplets
@@ -131,10 +115,7 @@
         {% endif %}
     </body>
     <script>
-        //user dropdown
-        document.querySelectorAll('.user-link')[0].addEventListener('click', () => {
-            document.querySelectorAll('.user-dropdown')[0].classList.toggle('active');
-        });
+        // No user dropdown needed
     </script>
     <script>
         //Retrieve stats/droplets/instances from the server and update the UI

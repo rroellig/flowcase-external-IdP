@@ -1,6 +1,4 @@
 var admin_droplets = [];
-var admin_users = [];
-var admin_groups = [];
 
 window.addEventListener('load', () => {
 	AdminChangeTab('system', document.querySelector('.admin-modal-sidebar-button'));
@@ -71,17 +69,7 @@ document.querySelector('.admin-modal-content').addEventListener('click', (e) => 
 	e.stopPropagation();
 });
 
-function OpenAdminPanel()
-{
-	var adminModal = document.getElementById('admin-modal');
-	adminModal.classList.add('active');
-}
-
-function CloseAdminPanel()
-{
-	var adminModal = document.getElementById('admin-modal');
-	adminModal.classList.remove('active');
-}
+// Duplicate functions removed - already defined above
 
 document.addEventListener('click', (e) => {
 	if (e.target.classList.contains('admin-modal')) {
@@ -113,47 +101,6 @@ function AdminChangeTab(tab, element = null)
 	}
 
 	switch (tab) {
-		case 'users':
-			header.innerText = "Users";
-			subtext.innerText = "View and manage the users of the system.";
-
-			//fetch groups as well
-			if (userInfo.permissions.perm_view_groups) {
-				FetchAdminGroups(function(json) {
-				});
-			}
-
-			FetchAdminUsers(function(json) {
-				content.innerHTML = ''
-
-				if (userInfo.permissions.perm_edit_users) {	
-					content.innerHTML += `
-						<button class="button-1-full" onclick="ShowEditUser()">Create User</button>
-						<hr>
-					`;
-				}
-
-				content.innerHTML += `
-					<table class="admin-modal-table">
-						<tr>
-							<th>Username</th>
-							<th>Groups</th>
-							${userInfo.permissions.perm_edit_users ? `<th>Actions</th>` : ''}
-						</tr>
-					${json["users"].map(user => `
-						<tr>
-							<td>${user.username}</td>
-							<td>${user.groups.map(group => {return group.display_name}).join(', ')}</td>
-							${userInfo.permissions.perm_edit_users ? `<td class="admin-modal-table-actions">
-								<i class="fas fa-edit" onclick="ShowEditUser('${user.id}')"></i>
-								<i class="fas fa-trash" onclick="AdminDeleteUser('${user.id}')"></i>
-							</td>` : ''}
-						</tr>
-					`).join('')}
-				</table>
-				`;
-			});
-			break;
 		case 'droplets':
 			header.innerText = "Droplets";
 			subtext.innerText = "View and manage droplets.";
@@ -343,36 +290,6 @@ function AdminChangeTab(tab, element = null)
 				</div>
 				`;
 				});
-			break;
-		case 'groups':
-			header.innerText = "Groups";
-			subtext.innerText = "View and manage the groups of the system.";
-
-			FetchAdminGroups(function(json) {
-				content.innerHTML = `
-					${userInfo.permissions.perm_edit_groups ? `
-						<button class="button-1-full" onclick="ShowEditGroup()">Create Group</button>
-						<hr>
-					` : ''}
-
-				<table class="admin-modal-table">
-					<tr>
-						<th>Name</th>
-						${userInfo.permissions.perm_edit_groups ? `<th>Actions</th>` : ''}
-					</tr>
-					${json["groups"].map(group => `
-						<tr>
-							<td>${group.display_name}</td>
-							${userInfo.permissions.perm_edit_groups ? `<td class="admin-modal-table-actions">
-								<i class="fas fa-edit" onclick="ShowEditGroup('${group.id}')"></i>
-								<i class="fas fa-trash" onclick="AdminDeleteGroup('${group.id}')"></i>
-							</td>` : ''}
-						</tr>
-					`).join('')}
-				</table>
-				`;
-			});
-
 			break;
 		case 'logs':
 			header.innerText = "System Logs";
@@ -568,34 +485,7 @@ function FetchAdminLogs(page)
 	console.log("Retrieving logs...");
 }
 
-function FetchAdminUsers(callback)
-{
-	var url = "/api/admin/users";
-	var xhr = new XMLHttpRequest();
-	xhr.open("GET", url, true);
-	xhr.setRequestHeader("Content-Type", "application/json");
-	xhr.onreadystatechange = function () {
-		if (xhr.readyState === 4) {
-			var json = JSON.parse(xhr.responseText);
-			if (json["success"] == true) {
-				admin_users = json["users"];
-				callback(json);
-			}
-			else
-			{
-				if (json["error"] != null) {
-					CreateNotification(json["error"], "error");
-				}
-				else {
-					CreateNotification("An error occurred while retrieving the users. Please try again later.", "error");
-				}
-			}
-		}
-	};
-	xhr.send();
-
-	console.log("Retrieving users...");
-}
+// User management removed - users come from IdP via HTTP headers
 
 function FetchAdminDroplets(callback)
 {
@@ -652,35 +542,6 @@ function FetchAdminInstances(callback)
 	xhr.send();
 
 	console.log("Retrieving instances...");
-}
-
-function FetchAdminGroups(callback)
-{
-	var url = "/api/admin/groups";
-	var xhr = new XMLHttpRequest();
-	xhr.open("GET", url, true);
-	xhr.setRequestHeader("Content-Type", "application/json");
-	xhr.onreadystatechange = function () {
-		if (xhr.readyState === 4) {
-			var json = JSON.parse(xhr.responseText);
-			if (json["success"] == true) {
-				admin_groups = json["groups"];
-				callback(json);
-			}
-			else
-			{
-				if (json["error"] != null) {
-					CreateNotification(json["error"], "error");
-				}
-				else {
-					CreateNotification("An error occurred while retrieving the groups. Please try again later.", "error");
-				}
-			}
-		}
-	};
-	xhr.send();
-
-	console.log("Retrieving groups...");
 }
 
 function FetchAdminRegistry(callback)
@@ -781,288 +642,6 @@ function AdminDeleteRegistry(registry_id)
 	xhr.send(data);
 
 	console.log("Deleting registry...");
-}
-
-function ShowEditUser(user_id = null)
-{
-	var header = document.getElementById('admin-modal-header');
-	var subtext = document.getElementById('admin-modal-subtext');
-
-	var user = admin_users.find(user => user.id == user_id);
-	if (user_id == null) {
-		header.innerText = "Create User";
-		subtext.innerText = "Create a new user.";
-	} else {
-		header.innerText = "Edit User";
-		subtext.innerText = "Edit an existing user.";
-	}
-
-	var content = document.querySelector('.admin-modal-main-content');
-	content.innerHTML = `
-	<div class="admin-modal-card">
-		<p>Username <span class="required">*</span></p>
-		<input type="text" id="admin-edit-user-username" value="${ user_id != null ? admin_users.find(user => user.id == user_id).username : "" }" autocomplete="off">
-	</div>
-
-	${user_id == null ? `
-	<div class="admin-modal-card">
-		<p>Password <span class="required">*</span></p>
-		<input type="password" id="admin-edit-user-password" autocomplete="new-password">
-	</div> 
-	` : ""}
-
-	<div class="admin-modal-card">
-		<p>Groups <span class="required">*</span></p>
-		<select id="admin-edit-user-groups" class="select-multiple" multiple>
-			${admin_groups.map(group => `
-				<option value="${group.id}" ${user_id != null && user.groups.find(user_group => user_group.id == group.id) ? "selected" : ""}>${group.display_name}</option>
-			`).join('')}
-		</select>
-	</div>
-
-	<button class="button-1-full" onclick="SaveUser('${user_id}')">Save</button>
-	`;
-}
-
-function SaveUser(user_id = null)
-{
-	var url = "/api/admin/user";
-	var xhr = new XMLHttpRequest();
-	xhr.open("POST", url, true);
-	xhr.setRequestHeader("Content-Type", "application/json");
-	xhr.onreadystatechange = function () {
-		if (xhr.readyState === 4) {
-			var json = JSON.parse(xhr.responseText);
-			if (json["success"] == true) {
-				CreateNotification("User saved successfully.", "success");
-
-				//Logout if the current user is edited
-				if (user_id == userInfo.id) {
-					window.location.href = "/logout";
-				}
-				
-				//Update users
-				FetchAdminUsers(function(json) {
-					AdminChangeTab('users');
-				});
-			}
-			else
-			{
-				if (json["error"] != null) {
-					CreateNotification(json["error"], "error");
-				}
-				else {
-					CreateNotification("An error occurred while saving the user. Please try again later.", "error");
-				}
-			}
-		}
-	};
-	var data = JSON.stringify({
-		"id": user_id,
-		"username": document.getElementById('admin-edit-user-username').value,
-		"password": user_id == "null" ? document.getElementById('admin-edit-user-password').value : "",
-		"groups": Array.from(document.getElementById('admin-edit-user-groups').selectedOptions).map(option => option.value)
-	});
-	xhr.send(data);
-
-	console.log("Saving user...");
-}
-
-function AdminDeleteUser(user_id)
-{
-	if (!confirm("Are you sure you want to delete this user?")) {
-		return;
-	}
-
-	var url = "/api/admin/user";
-	var xhr = new XMLHttpRequest();
-	xhr.open("DELETE", url, true);
-	xhr.setRequestHeader("Content-Type", "application/json");
-	xhr.onreadystatechange = function () {
-		if (xhr.readyState === 4) {
-			var json = JSON.parse(xhr.responseText);
-			if (json["success"] == true) {
-				CreateNotification("User deleted successfully.", "success");
-
-				//Logout if the current user is deleted
-				if (user_id == userInfo.id) {
-					window.location.href = "/logout";
-				}
-
-				//Update users
-				FetchAdminUsers(function(json) {
-					AdminChangeTab('users');
-				});
-			}
-			else
-			{
-				if (json["error"] != null) {
-					CreateNotification(json["error"], "error");
-				}
-				else {
-					CreateNotification("An error occurred while deleting the user. Please try again later.", "error");
-				}
-			}
-		}
-	};
-	var data = JSON.stringify({"id": user_id});
-	xhr.send(data);
-
-	console.log("Deleting user...");
-}
-
-function ShowEditGroup(group_id = null)
-{
-	var header = document.getElementById('admin-modal-header');
-	var subtext = document.getElementById('admin-modal-subtext');
-
-	var group = admin_groups.find(group => group.id == group_id);
-	if (group_id == null) {
-		header.innerText = "Create Group";
-		subtext.innerText = "Create a new group.";
-	} else {
-		header.innerText = "Edit Group";
-		subtext.innerText = "Edit an existing group.";
-	}
-
-	var content = document.querySelector('.admin-modal-main-content');
-	content.innerHTML = `
-	<div class="admin-modal-card">
-		<p>Display Name <span class="required">*</span></p>
-		<input type="text" id="admin-edit-group-display-name" value="${ group_id != null ? group.display_name : "" }">
-	</div>
-
-	<div class="admin-modal-card">
-		<p>Can View Admin Panel</p>
-		<input type="checkbox" id="admin-edit-group-can-view-admin-panel" ${ group_id != null && group.permissions.admin_panel ? "checked" : "" }>
-	</div>
-
-	<div class="admin-modal-card">
-		<p>Can View Users</p>
-		<input type="checkbox" id="admin-edit-group-can-view-users" ${ group_id != null && group.permissions.view_users ? "checked" : "" }>
-	</div>
-
-	<div class="admin-modal-card">
-		<p>Can Edit Users</p>
-		<input type="checkbox" id="admin-edit-group-can-edit-users" ${ group_id != null && group.permissions.edit_users ? "checked" : "" }>
-	</div>
-
-	<div class="admin-modal-card">
-		<p>Can View Groups</p>
-		<input type="checkbox" id="admin-edit-group-can-view-groups" ${ group_id != null && group.permissions.view_groups ? "checked" : "" }>
-	</div>
-
-	<div class="admin-modal-card">
-		<p>Can Edit Groups</p>
-		<input type="checkbox" id="admin-edit-group-can-edit-groups" ${ group_id != null && group.permissions.edit_groups ? "checked" : "" }>
-	</div>
-
-	<div class="admin-modal-card">
-		<p>Can View Droplets</p>
-		<input type="checkbox" id="admin-edit-group-can-view-droplets" ${ group_id != null && group.permissions.view_droplets ? "checked" : "" }>
-	</div>
-
-	<div class="admin-modal-card">
-		<p>Can Edit Droplets</p>
-		<input type="checkbox" id="admin-edit-group-can-edit-droplets" ${ group_id != null && group.permissions.edit_droplets ? "checked" : "" }>
-	</div>
-
-	<div class="admin-modal-card">
-		<p>Can View Instances</p>
-		<input type="checkbox" id="admin-edit-group-can-view-instances" ${ group_id != null && group.permissions.view_instances ? "checked" : "" }>
-	</div>
-
-	<div class="admin-modal-card">
-		<p>Can Edit Instances</p>
-		<input type="checkbox" id="admin-edit-group-can-edit-instances" ${ group_id != null && group.permissions.edit_instances ? "checked" : "" }>
-	</div>
-
-	<button class="button-1-full" onclick="SaveGroup('${group_id}')">Save</button>
-	`;
-}
-
-function SaveGroup(group_id = null)
-{
-	var url = "/api/admin/group";
-	var xhr = new XMLHttpRequest();
-	xhr.open("POST", url, true);
-	xhr.setRequestHeader("Content-Type", "application/json");
-	xhr.onreadystatechange = function () {
-		if (xhr.readyState === 4) {
-			var json = JSON.parse(xhr.responseText);
-			if (json["success"] == true) {
-				CreateNotification("Group saved successfully.", "success");
-
-				//Update groups
-				FetchAdminGroups(function(json) {
-					AdminChangeTab('groups');
-				});
-			}
-			else
-			{
-				if (json["error"] != null) {
-					CreateNotification(json["error"], "error");
-				}
-				else {
-					CreateNotification("An error occurred while saving the group. Please try again later.", "error");
-				}
-			}
-		}
-	};
-	var data = JSON.stringify({
-		"id": group_id,
-		"display_name": document.getElementById('admin-edit-group-display-name').value,
-		"perm_admin_panel": document.getElementById('admin-edit-group-can-view-admin-panel').checked,
-		"perm_view_users": document.getElementById('admin-edit-group-can-view-users').checked,
-		"perm_edit_users": document.getElementById('admin-edit-group-can-edit-users').checked,
-		"perm_view_groups": document.getElementById('admin-edit-group-can-view-groups').checked,
-		"perm_edit_groups": document.getElementById('admin-edit-group-can-edit-groups').checked,
-		"perm_view_droplets": document.getElementById('admin-edit-group-can-view-droplets').checked,
-		"perm_edit_droplets": document.getElementById('admin-edit-group-can-edit-droplets').checked,
-		"perm_view_instances": document.getElementById('admin-edit-group-can-view-instances').checked,
-		"perm_edit_instances": document.getElementById('admin-edit-group-can-edit-instances').checked
-	});
-	xhr.send(data);
-
-	console.log("Saving group...");
-}
-
-function AdminDeleteGroup(group_id)
-{
-	if (!confirm("Are you sure you want to delete this group?")) {
-		return;
-	}
-
-	var url = "/api/admin/group";
-	var xhr = new XMLHttpRequest();
-	xhr.open("DELETE", url, true);
-	xhr.setRequestHeader("Content-Type", "application/json");
-	xhr.onreadystatechange = function () {
-		if (xhr.readyState === 4) {
-			var json = JSON.parse(xhr.responseText);
-			if (json["success"] == true) {
-				CreateNotification("Group deleted successfully.", "success");
-
-				//Update groups
-				FetchAdminGroups(function(json) {
-					AdminChangeTab('groups');
-				});
-			}
-			else
-			{
-				if (json["error"] != null) {
-					CreateNotification(json["error"], "error");
-				}
-				else {
-					CreateNotification("An error occurred while deleting the group. Please try again later.", "error");
-				}
-			}
-		}
-	};
-	var data = JSON.stringify({"id": group_id});
-	xhr.send(data);
-
-	console.log("Deleting group...");
 }
 
 function ShowEditDropletRegistry(display_name, description, image_path, container_docker_registry, container_docker_image, selected_tag)
