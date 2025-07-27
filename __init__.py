@@ -42,7 +42,7 @@ def create_app(config=None):
     # Auto-login middleware
     @app.before_request
     def auto_login():
-        from models.user import User
+        from utils.user import User
         
         # Get user from HTTP headers
         user = User.get_current_user()

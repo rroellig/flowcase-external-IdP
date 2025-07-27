@@ -4,7 +4,7 @@ import os
 import subprocess
 from flask import Blueprint, jsonify, request, g
 from __init__ import db, __version__, __commit__
-from models.user import User
+from utils.user import User
 from models.droplet import Droplet, DropletInstance
 from models.registry import Registry
 from models.log import Log

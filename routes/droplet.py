@@ -10,7 +10,7 @@ from flask import Blueprint, jsonify, request, render_template, redirect, g
 import psutil
 from __init__ import db, __version__
 from models.droplet import Droplet, DropletInstance
-from models.user import User
+from utils.user import User
 from utils.logger import log
 import utils.docker
 
