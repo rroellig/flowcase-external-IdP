@@ -3,7 +3,7 @@
 ## Purpose of this fork
 - use traefik as reverse proxy (https and auth forwarding)
 - use authentik as external idendity provider (IdP)
-- handle use and group management exclusively by external IdP
+- handle user and group management exclusively by external IdP
 - checkout development branch to see changes
 
 ---
