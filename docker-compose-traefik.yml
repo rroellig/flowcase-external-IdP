@@ -47,7 +47,7 @@ services:
       - traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN}`)
       - traefik.http.routers.traefik.tls.certresolver=acme-resolver
       - traefik.http.routers.traefik.service=api@internal
-      #- traefik.http.routers.traefik.middlewares=authentik@file
+      - traefik.http.routers.traefik.middlewares=authentik@file
 
 networks:
   proxy_network:

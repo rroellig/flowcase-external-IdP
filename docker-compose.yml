@@ -20,7 +20,7 @@ services:
       - FLASK_APP=run.py
       - FLASK_DEBUG=0
     networks:
-      - flowcase_network
+      - default_network
     command: python run.py --debug-user=admin --debug-groups=admin
 
   web-headers:
@@ -36,7 +36,7 @@ services:
       - FLASK_APP=run_headers.py
       - FLASK_DEBUG=0
     networks:
-      - flowcase_network
+      - default_network
     command: python run_headers.py
 
   nginx:
@@ -57,14 +57,14 @@ services:
       - traefik.http.routers.flowcase.tls.certresolver=acme-resolver
       - traefik.http.services.flowcase.loadbalancer.server.port=80
       # enable middleware to add authentication by authentik
-      # - traefik.http.routers.flowcase.middlewares=authentik@file
+      - traefik.http.routers.flowcase.middlewares=authentik@file
       - traefik.docker.network=proxy_network
     networks:
-      - flowcase_network
+      - default_network
       - proxy_network
 
 networks:
-  flowcase_network:
+  default_network:
     driver: bridge
 
 volumes:

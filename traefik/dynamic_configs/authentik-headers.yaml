@@ -3,7 +3,7 @@ http:
     authentik:
       forwardAuth:        
         trustForwardHeader: true
-        address: ${AUTHENTIK_SERVER_URL}
+        address: http://authentik_server:9000/outpost.goauthentik.io/auth/traefik
         authResponseHeaders:
           - X-authentik-username
           - X-authentik-groups
