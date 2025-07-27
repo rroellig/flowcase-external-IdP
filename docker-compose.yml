@@ -21,7 +21,8 @@ services:
       - FLASK_DEBUG=0
     networks:
       - default_network
-    command: python run.py
+    # command: python run.py
+    command: gunicorn --bind 0.0.0.0:5000 --workers 1 --threads 4 --worker-class=gthread --access-logfile - --error-logfile - wsgi:app --preload --timeout 120
 
   web-headers:
     build:
@@ -37,7 +38,8 @@ services:
       - FLASK_DEBUG=0
     networks:
       - default_network
-    command: python run_headers.py
+    # command: python run_headers.py
+    command: gunicorn --bind 0.0.0.0:5000 --workers 1 --threads 2 --worker-class=gthread --access-logfile - --error-logfile - wsgi_headers:app --preload --timeout 120
 
   nginx:
     image: nginx:1.28-alpine
