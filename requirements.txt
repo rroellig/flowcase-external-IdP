@@ -5,3 +5,4 @@ flask_migrate==4.0.7
 docker==7.1.0
 psutil==6.0.0
 pycryptodome==3.21.0
+gunicorn==21.2.0
