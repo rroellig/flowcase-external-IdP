@@ -4,7 +4,16 @@ FROM python:3.11-slim
 ARG COMMIT_HASH=Unknown
 
 WORKDIR /flowcase
-ADD . /flowcase
+COPY build_scripts /flowcase/build_scripts
+COPY config /flowcase/config
+COPY models /flowcase/models
+COPY nginx /flowcase/nginx
+COPY routes /flowcase/routes
+COPY static /flowcase/static
+COPY templates /flowcase/templates
+COPY utils /flowcase/utils
+COPY __init__.py run.py run_headers.py /flowcase/
+COPY requirements.txt /flowcase
 
 # Make the inject script executable and run it
 RUN chmod +x /flowcase/build_scripts/inject_commit.sh && \

@@ -1,3 +1,8 @@
+
+---
+#include:
+#  - docker-compose-traefik.yml
+
 services:
   web:
     build:
@@ -13,26 +18,22 @@ services:
     environment:
       - FLASK_APP=run.py
       - FLASK_DEBUG=0
-    ports:
-      - "5000"
     networks:
       - default_network
-    command: python run.py
+    command: python run.py --debug-user=admin --debug-groups=admin
 
   web-headers:
     build:
       context: .
       dockerfile: web.Dockerfile
     image: flowcaseweb/flowcase
-    container_name: flowcase-web
+    container_name: flowcase-web-headers
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - FLASK_APP=run_headers.py
       - FLASK_DEBUG=0
-    ports:
-      - "5001"
     networks:
       - default_network
     command: python run_headers.py
