@@ -7,15 +7,12 @@ from models.user import User
 from models.droplet import Droplet, DropletInstance
 from models.registry import Registry
 from models.log import Log
-from utils.permissions import Permissions
 import utils.docker
 
 admin_bp = Blueprint('admin', __name__)
 
 @admin_bp.route('/system_info', methods=['GET'])
 def api_admin_system():
-	if not Permissions.check_permission(g.user.id, Permissions.ADMIN_PANEL):
-		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	#Get Nginx version
 	nginx_version = None
@@ -45,8 +42,6 @@ def api_admin_system():
 
 @admin_bp.route('/users', methods=['GET'])
 def api_admin_users():
-	if not Permissions.check_permission(g.user.id, Permissions.VIEW_USERS):
-		return jsonify({"success": False, "error": "Unauthorized"}), 403
 	
 	# Only return the current user since users are not stored in the database
 	response = {
@@ -63,8 +58,6 @@ def api_admin_users():
 
 @admin_bp.route('/instances', methods=['GET'])
 def api_admin_instances():
-	if not Permissions.check_permission(g.user.id, Permissions.VIEW_INSTANCES):
-		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	if not utils.docker.is_docker_available():
 		return jsonify({
@@ -112,8 +105,6 @@ def api_admin_instances():
 
 @admin_bp.route('/droplets', methods=['GET'])
 def api_admin_droplets():
-	if not Permissions.check_permission(g.user.id, Permissions.VIEW_DROPLETS):
-		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	droplets = Droplet.query.all()
 	droplets = sorted(droplets, key=lambda x: x.display_name)
@@ -145,8 +136,6 @@ def api_admin_droplets():
 
 @admin_bp.route('/droplet', methods=['POST'])
 def api_admin_edit_droplet():
-	if not Permissions.check_permission(g.user.id, Permissions.EDIT_DROPLETS):
-		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	droplet_id = request.json.get('id')
 	droplet = Droplet.query.filter_by(id=droplet_id).first()
@@ -235,8 +224,6 @@ def api_admin_edit_droplet():
 
 @admin_bp.route('/droplet', methods=['DELETE'])
 def api_admin_delete_droplet():
-	if not Permissions.check_permission(g.user.id, Permissions.EDIT_DROPLETS):
-		return jsonify({"success": False, "error": "Unauthorized"}), 403
 	
 	droplet_id = request.json.get('id')
 	droplet = Droplet.query.filter_by(id=droplet_id).first()
@@ -268,8 +255,6 @@ def api_admin_delete_droplet():
 
 @admin_bp.route('/instance', methods=['DELETE'])
 def api_admin_delete_instance():
-	if not Permissions.check_permission(g.user.id, Permissions.EDIT_INSTANCES):
-		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	instance_id = request.json.get('id')
 	instance = DropletInstance.query.filter_by(id=instance_id).first()
@@ -294,8 +279,6 @@ def api_admin_delete_instance():
 
 @admin_bp.route('/registry')
 def api_admin_registry():
-	if not Permissions.check_permission(g.user.id, Permissions.VIEW_REGISTRY):
-		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	registry = Registry.query.all()
 
@@ -331,8 +314,6 @@ def api_admin_registry():
 @admin_bp.route('/registry', methods=['POST', 'DELETE'])
 def api_admin_edit_registry():
 	if request.method == 'POST':
-		if not Permissions.check_permission(g.user.id, Permissions.EDIT_REGISTRY):
-			return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 		url = request.json.get('url')
 		if not url:
@@ -350,8 +331,6 @@ def api_admin_edit_registry():
 		return jsonify({"success": True})
 
 	elif request.method == 'DELETE':
-		if not Permissions.check_permission(g.user.id, Permissions.EDIT_REGISTRY):
-			return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 		registry_id = request.json.get('id')
 		registry = Registry.query.filter_by(id=registry_id).first()
