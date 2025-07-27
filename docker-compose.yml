@@ -1,7 +1,7 @@
 
 ---
-#include:
-#  - docker-compose-traefik.yml
+include:
+ - docker-compose-traefik.yml
 
 services:
   web:
@@ -44,12 +44,22 @@ services:
     restart: unless-stopped
     volumes:
       - flowcase-nginx-data:/etc/nginx/conf.d
-    ports:
-      - "80:80"
+    # ports:
+    #  - "80:80"
     depends_on:
       - web
+      - web-headers
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.flowcase.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.flowcase.entrypoints=websecure
+      - traefik.http.routers.flowcase.tls.certresolver=acme-resolver
+      - traefik.http.services.flowcase.loadbalancer.server.port=80
+      # - traefik.http.routers.flowcase.middlewares=authentik@file
+      - traefik.docker.network=proxy      
     networks:
       - default_network
+      - proxy
 
 networks:
   default_network:
