@@ -15,6 +15,6 @@ def log(level: str, message: str):
 	args = parse_args()
 	
 	if level != "DEBUG" or args.debug:
-		print(f"[{level}] | {timestamp} | {message}")
+		print(f"[{level}] | {timestamp} | {message}", flush=True)
 		
 	return log_entry 

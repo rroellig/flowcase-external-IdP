@@ -71,3 +71,9 @@ def create_app(config=None):
         return {}
     
     return app
+
+def initialize_database_and_setup():
+	db.create_all()
+	from utils.setup import initialize_app
+	from flask import current_app
+	initialize_app(current_app) 

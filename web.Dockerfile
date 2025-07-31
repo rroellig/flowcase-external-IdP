@@ -12,7 +12,7 @@ COPY routes /flowcase/routes
 COPY static /flowcase/static
 COPY templates /flowcase/templates
 COPY utils /flowcase/utils
-COPY __init__.py run.py run_headers.py wsgi.py wsgi_headers.py /flowcase/
+COPY __init__.py run.py gunicorn.conf.py /flowcase/
 COPY requirements.txt /flowcase
 
 # Make the inject script executable and run it

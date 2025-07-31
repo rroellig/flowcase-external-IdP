@@ -3,7 +3,7 @@
 ## Purpose of this fork
 - use traefik as reverse proxy (https and auth forwarding)
 - use authentik as external idendity provider (IdP)
-- handle use and group management exclusively by external IdP
+- handle user and group management exclusively by external IdP
 - checkout development branch to see changes
 
 ---
@@ -40,7 +40,7 @@
 Before getting started, ensure you have:
 
 - Docker and Docker Compose installed on your machine
-- Sudo/root access
+- A user with sudo/root access or a user in the `docker` group
 - Basic knowledge of container management
 
 ## Setup Instructions

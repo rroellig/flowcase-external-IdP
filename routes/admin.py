@@ -1,14 +1,16 @@
 import platform
 import sys
 import os
-import subprocess
 from flask import Blueprint, jsonify, request, g
+from sqlalchemy.sql import func
 from __init__ import db, __version__, __commit__
 from utils.user import User
 from models.droplet import Droplet, DropletInstance
 from models.registry import Registry
 from models.log import Log
 import utils.docker
+import subprocess
+
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -27,6 +29,8 @@ def get_git_commit():
 
 @admin_bp.route('/system_info', methods=['GET'])
 def api_admin_system():
+	if not g.user.is_admin():
+		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	#Get Nginx version
 	nginx_version = None
@@ -54,22 +58,6 @@ def api_admin_system():
 			"nginx": nginx_version,
 			"commit": commit,
 		},
-	}
- 
-	return jsonify(response)
-
-@admin_bp.route('/users', methods=['GET'])
-def api_admin_users():
-	
-	# Only return the current user since users are not stored in the database
-	response = {
-		"success": True,
-		"users": [{
-			"id": g.user.id,
-			"username": g.user.username,
-			"is_admin": g.user.is_admin
-		}],
-		"note": "Users are managed via IdP and retrieved from HTTP headers"
 	}
  
 	return jsonify(response)
@@ -154,6 +142,8 @@ def api_admin_droplets():
 
 @admin_bp.route('/droplet', methods=['POST'])
 def api_admin_edit_droplet():
+	if not g.user.is_admin():
+		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	droplet_id = request.json.get('id')
 	droplet = Droplet.query.filter_by(id=droplet_id).first()
@@ -238,10 +228,15 @@ def api_admin_edit_droplet():
  
 	db.session.commit()
  
-	return jsonify({"success": True})
+	return jsonify({
+		"success": True,
+		"droplet_id": droplet.id
+	})
 
 @admin_bp.route('/droplet', methods=['DELETE'])
 def api_admin_delete_droplet():
+	if not g.user.is_admin():
+		return jsonify({"success": False, "error": "Unauthorized"}), 403
 	
 	droplet_id = request.json.get('id')
 	droplet = Droplet.query.filter_by(id=droplet_id).first()
@@ -273,6 +268,8 @@ def api_admin_delete_droplet():
 
 @admin_bp.route('/instance', methods=['DELETE'])
 def api_admin_delete_instance():
+	if not g.user.is_admin():
+		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	instance_id = request.json.get('id')
 	instance = DropletInstance.query.filter_by(id=instance_id).first()
@@ -297,6 +294,8 @@ def api_admin_delete_instance():
 
 @admin_bp.route('/registry')
 def api_admin_registry():
+	if not g.user.is_admin():
+		return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 	registry = Registry.query.all()
 
@@ -332,6 +331,8 @@ def api_admin_registry():
 @admin_bp.route('/registry', methods=['POST', 'DELETE'])
 def api_admin_edit_registry():
 	if request.method == 'POST':
+		if not g.user.is_admin():
+			return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 		url = request.json.get('url')
 		if not url:
@@ -349,6 +350,8 @@ def api_admin_edit_registry():
 		return jsonify({"success": True})
 
 	elif request.method == 'DELETE':
+		if not g.user.is_admin():
+			return jsonify({"success": False, "error": "Unauthorized"}), 403
 
 		registry_id = request.json.get('id')
 		registry = Registry.query.filter_by(id=registry_id).first()
@@ -362,6 +365,8 @@ def api_admin_edit_registry():
 
 @admin_bp.route('/logs', methods=['GET'])
 def api_admin_logs():
+	if not g.user.is_admin():
+		return jsonify({"success": False, "error": "You do not have permission to view logs"})
 	
 	page = request.args.get('page', 1, type=int)
 	per_page = request.args.get('per_page', 50, type=int)
@@ -392,3 +397,145 @@ def api_admin_logs():
 			"pages": logs_pagination.pages
 		}
 	}) 
+
+@admin_bp.route('/images/status', methods=['GET'])
+def api_admin_images_status():
+	"""Get the download status of all droplet images"""
+	if not g.user.is_admin():
+		return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+	if not utils.docker.is_docker_available():
+		return jsonify({
+			"success": False, 
+			"error": "Docker service is not available"
+		}), 503
+
+	status = utils.docker.get_images_status()
+	
+	return jsonify({
+		"success": True,
+		"images": status
+	})
+
+@admin_bp.route('/images/pull', methods=['POST'])
+def api_admin_pull_image():
+	"""Pull a specific droplet image"""
+	if not g.user.is_admin():
+		return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+	if not utils.docker.is_docker_available():
+		return jsonify({
+			"success": False, 
+			"error": "Docker service is not available"
+		}), 503
+
+	droplet_id = request.json.get('droplet_id')
+	registry = request.json.get('registry')
+	image = request.json.get('image')
+	
+	# Handle auto-download case where registry and image are provided directly
+	if registry and image:
+		success, message = utils.docker.pull_single_image(registry, image)
+		if success:
+			return jsonify({
+				"success": True,
+				"message": message
+			})
+		else:
+			return jsonify({
+				"success": False,
+				"error": message
+			}), 500
+	
+	# Handle droplet_id case (existing functionality)
+	if not droplet_id:
+		return jsonify({"success": False, "error": "Droplet ID is required"}), 400
+
+	# Handle special guac droplet
+	if droplet_id == "guac":
+		from __init__ import __version__
+		registry = "https://index.docker.io/v1/"
+		image_name = f"flowcaseweb/flowcase-guac:{__version__}"
+	else:
+		# Get droplet info
+		droplet = Droplet.query.filter_by(id=droplet_id).first()
+		if not droplet:
+			return jsonify({"success": False, "error": "Droplet not found"}), 404
+
+		if not droplet.container_docker_image:
+			return jsonify({"success": False, "error": "Droplet has no Docker image configured"}), 400
+
+		registry = droplet.container_docker_registry
+		image_name = droplet.container_docker_image
+
+	# Pull the image
+	success, message = utils.docker.pull_single_image(registry, image_name)
+	
+	if success:
+		return jsonify({
+			"success": True,
+			"message": message
+		})
+	else:
+		return jsonify({
+			"success": False,
+			"error": message
+		}), 500
+
+@admin_bp.route('/images/pull-all', methods=['POST'])
+def api_admin_pull_all_images():
+	"""Pull all droplet images"""
+	if not g.user.is_admin():
+		return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+	if not utils.docker.is_docker_available():
+		return jsonify({
+			"success": False, 
+			"error": "Docker service is not available"
+		}), 503
+
+	try:
+		# Use existing pull_images function
+		utils.docker.pull_images()
+		
+		return jsonify({
+			"success": True,
+			"message": "Started downloading all images. Check logs for progress."
+		})
+	except Exception as e:
+		return jsonify({
+			"success": False,
+			"error": f"Failed to start image downloads: {str(e)}"
+		}), 500 
+
+@admin_bp.route('/images/logs', methods=['GET'])
+def api_admin_image_logs():
+	"""Get recent image download logs and errors"""
+	if not g.user.is_admin():
+		return jsonify({"success": False, "error": "Unauthorized"}), 403
+
+	try:
+		# Get recent logs related to Docker image operations
+		recent_logs = Log.query.filter(
+			Log.message.like('%Docker image%')
+		).order_by(Log.created_at.desc()).limit(50).all()
+		
+		logs = []
+		for log in recent_logs:
+			logs.append({
+				"id": log.id,
+				"created_at": log.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+				"level": log.level,
+				"message": log.message
+			})
+		
+		return jsonify({
+			"success": True,
+			"logs": logs
+		})
+		
+	except Exception as e:
+		return jsonify({
+			"success": False,
+			"error": f"Failed to fetch image logs: {str(e)}"
+		}), 500 

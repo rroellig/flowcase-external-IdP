@@ -21,25 +21,7 @@ services:
       - FLASK_DEBUG=0
     networks:
       - default_network
-    # command: python run.py
-    command: gunicorn --bind 0.0.0.0:5000 --workers 2 --threads 4 --worker-class=gthread --access-logfile - --error-logfile - wsgi:app --preload --timeout 120
-
-  web-headers:
-    build:
-      context: .
-      dockerfile: web.Dockerfile
-    image: flowcaseweb/flowcase
-    container_name: flowcase-web-headers
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      - FLASK_APP=run_headers.py
-      - FLASK_DEBUG=0
-    networks:
-      - default_network
-    # command: python run_headers.py
-    command: gunicorn --bind 0.0.0.0:5000 --workers 1 --threads 2 --worker-class=gthread --access-logfile - --error-logfile - wsgi_headers:app --preload --timeout 120
+    command: python run.py
 
   nginx:
     image: nginx:1.28-alpine

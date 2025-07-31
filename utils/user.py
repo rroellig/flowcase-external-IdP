@@ -1,5 +1,5 @@
+import os
 from flask import request, abort
-from config.config import parse_args
 
 class User():
 	"""
@@ -28,13 +28,18 @@ class User():
 		"""
 		return self.groups
 	
+	def is_admin(self):
+		"""
+		Check if user is in group admin
+		"""
+		if 'admin' in self.groups:
+			return True
+	
 	@staticmethod
 	def get_current_user():
 		"""
-		Get user and groups from HTTP headers or debug arguments
+		Get user and groups from HTTP headers or environment variables
 		"""
-		# Get command line arguments
-		args = parse_args()
 		
 		# Check for headers first
 		username = request.headers.get("X-Authentik-Username")
@@ -44,15 +49,16 @@ class User():
 		# print("X-Authentik-Username: ", username)
 		# print("X-Authentik-Groups: ", groups_header)
 		
-		# If no username in headers, check for debug arguments
-		if not username and args.debug_user:
-			print(f"Using debug username: {args.debug_user}")
-			username = args.debug_user
+		# If no username in headers, check for debug arguments from command line or environment variables
+		if not username:
+			os.environ.get('FLOWCASE_DEBUG_USER')
+			print(f"Using debug username from environment: {os.environ.get('FLOWCASE_DEBUG_USER')}")
+			username = os.environ.get('FLOWCASE_DEBUG_USER')
 			
 			# Use debug groups if provided
-			if args.debug_groups:
-				groups_header = args.debug_groups
-				print(f"Using debug groups: {groups_header}")
+			if os.environ.get('FLOWCASE_DEBUG_GROUPS'):
+				groups_header = os.environ.get('FLOWCASE_DEBUG_GROUPS')
+				print(f"Using debug groups from environment: {groups_header}")
 		
 		# If still no username, abort with 401
 		if not username:
