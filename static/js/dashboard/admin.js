@@ -478,6 +478,34 @@ function FetchAdminLogs(page)
 
 // User management removed - users come from IdP via HTTP headers
 
+function FetchAdminInstances(callback)
+{
+	var url = "/api/instances";
+	var xhr = new XMLHttpRequest();
+	xhr.open("GET", url, true);
+	xhr.setRequestHeader("Content-Type", "application/json");
+	xhr.onreadystatechange = function () {
+		if (xhr.readyState === 4) {
+			var json = JSON.parse(xhr.responseText);
+			if (json["success"] == true) {
+				callback(json);
+			}
+			else
+			{
+				if (json["error"] != null) {
+					CreateNotification(json["error"], "error");
+				}
+				else {
+					CreateNotification("An error occurred while retrieving the instances. Please try again later.", "error");
+				}
+			}
+		}
+	};
+	xhr.send();
+
+	console.log("Retrieving instances...");
+}
+
 function FetchAdminDroplets(callback)
 {
 	var url = "/api/admin/droplets";
@@ -505,34 +533,6 @@ function FetchAdminDroplets(callback)
 	xhr.send();
 
 	console.log("Retrieving droplets...");
-}
-
-function FetchAdminInstances(callback)
-{
-	var url = "/api/admin/instances";
-	var xhr = new XMLHttpRequest();
-	xhr.open("GET", url, true);
-	xhr.setRequestHeader("Content-Type", "application/json");
-	xhr.onreadystatechange = function () {
-		if (xhr.readyState === 4) {
-			var json = JSON.parse(xhr.responseText);
-			if (json["success"] == true) {
-				callback(json);
-			}
-			else
-			{
-				if (json["error"] != null) {
-					CreateNotification(json["error"], "error");
-				}
-				else {
-					CreateNotification("An error occurred while retrieving the instances. Please try again later.", "error");
-				}
-			}
-		}
-	};
-	xhr.send();
-
-	console.log("Retrieving instances...");
 }
 
 function FetchAdminRegistry(callback)

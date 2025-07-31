@@ -77,8 +77,8 @@ def get_droplets():
 
 @droplet_bp.route('/api/instances', methods=['GET'])
 def get_instances():
-	instances = DropletInstance.query.filter_by(username=g.user.username).all()
- 
+	instances = DropletInstance.query.all()
+
 	response = {
 		"success": True,
 		"instances": []
@@ -86,10 +86,27 @@ def get_instances():
  
 	for instance in instances:
 		droplet = Droplet.query.filter_by(id=instance.droplet_id).first()
+		
+		# Try to get container IP if it exists
+		ip = "N/A"
+		try:
+			container = utils.docker.docker_client.containers.get(f"flowcase_generated_{instance.id}")
+			networks = container.attrs['NetworkSettings']['Networks']
+			
+			# Try different network name variations
+			for network_name in ['flowcase_default_network', 'default_network', 'bridge']:
+				if network_name in networks and networks[network_name]['IPAddress']:
+					ip = networks[network_name]['IPAddress']
+					break
+		except:
+			# Container might not exist or other error
+			pass
+			
 		response["instances"].append({
 			"id": instance.id,
 			"created_at": instance.created_at,
 			"updated_at": instance.updated_at,
+			"ip": ip,
 			"droplet": {
 				"id": droplet.id,
 				"display_name": droplet.display_name,
@@ -102,6 +119,9 @@ def get_instances():
 				"container_memory": droplet.container_memory,
 				"server_ip": droplet.server_ip,
 				"server_port": droplet.server_port,
+				"user": {
+					"username": instance.username,
+				}
 			}
 		})
  
