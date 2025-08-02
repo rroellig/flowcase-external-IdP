@@ -7,7 +7,7 @@ from typing import Tuple
 import docker
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
-from flask import Blueprint, jsonify, request, render_template, redirect, g, make_response, send_from_directory
+from flask import Blueprint, jsonify, request, render_template, redirect, g
 import psutil
 from __init__ import db, __version__
 from models.droplet import Droplet, DropletInstance
@@ -404,17 +404,17 @@ def check_resources(droplet: Droplet) -> Tuple[bool, str]:
 	max_allowed_cores = system_cores * 2.0
 	
 	if projected_memory_usage > max_allowed_memory:
-		log("ERROR", f"Insufficient memory for user {current_user.username} to request droplet {droplet.display_name} - would use {projected_memory_usage}MB of {max_allowed_memory}MB allowed")
+		log("ERROR", f"Insufficient memory for user {g.user.username} to request droplet {droplet.display_name} - would use {projected_memory_usage}MB of {max_allowed_memory}MB allowed")
 		return False, "Insufficient memory to start this droplet"
 	
 	if projected_core_usage > max_allowed_cores:
-		log("ERROR", f"Insufficient CPU cores for user {current_user.username} to request droplet {droplet.display_name} - would use {projected_core_usage} of {max_allowed_cores} cores allowed")
+		log("ERROR", f"Insufficient CPU cores for user {g.user.username} to request droplet {droplet.display_name} - would use {projected_core_usage} of {max_allowed_cores} cores allowed")
 		return False, "Insufficient CPU cores to start this droplet"
 	
 	return True, ""
 
 def generate_nginx_config(instance: DropletInstance, droplet: Droplet, ip: str, user: User) -> str:
-	authHeader = base64.b64encode(b'flowcase_user:' + user.auth_token.encode()).decode('utf-8')
+	authHeader = base64.b64encode(b'flowcase_user:' + FIXED_AUTH_TOKEN.encode()).decode('utf-8')
 	 
 	if droplet.droplet_type == "container":
 		nginx_config = open(f"config/nginx/container_template.conf", "r").read()
