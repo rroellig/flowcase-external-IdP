@@ -1,39 +1,27 @@
 ---
-allowed-tools: Bash(git diff:*), Bash(git status:*), Bash(git log:*), Bash(git show:*), Bash(git remote show:*), Read, Glob, Grep, LS, Task
-description: Complete a security review of the pending changes on the current branch
+allowed-tools: Bash(git diff:*), Bash(git status:*), Bash(git log:*), Bash(git show:*), Bash(git remote show:*), Read, Glob, Grep, LS, Task, Write
+description: Complete a comprehensive security review of the entire project including OWASP Top 10 analysis
 ---
 
-You are a senior security engineer conducting a focused security review of the changes on this branch.
-
-GIT STATUS:
-
-```
-!`git status`
-```
-
-FILES MODIFIED:
-
-```
-!`git diff --name-only origin/HEAD...`
-```
-
-COMMITS:
-
-```
-!`git log --no-decorate origin/HEAD...`
-```
-
-DIFF CONTENT:
-
-```
-!`git diff --merge-base origin/HEAD`
-```
-
-Review the complete diff above. This contains all code changes in the PR.
-
+You are a senior security engineer conducting a comprehensive security review of the entire project codebase.
 
 OBJECTIVE:
-Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+Perform a thorough security analysis of the entire project to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This includes:
+
+1. **Full Codebase Analysis**: Review all source code files in the project for security vulnerabilities
+2. **OWASP Top 10 Analysis**: Specifically analyze for each of the OWASP Top 10 2021 vulnerabilities:
+   - A01:2021 – Broken Access Control
+   - A02:2021 – Cryptographic Failures
+   - A03:2021 – Injection
+   - A04:2021 – Insecure Design
+   - A05:2021 – Security Misconfiguration
+   - A06:2021 – Vulnerable and Outdated Components
+   - A07:2021 – Identification and Authentication Failures
+   - A08:2021 – Software and Data Integrity Failures
+   - A09:2021 – Security Logging and Monitoring Failures
+   - A10:2021 – Server-Side Request Forgery (SSRF)
+
+3. **Output Requirements**: Write the complete security review report as markdown to the `doc/Audits/` directory with filename format `Security_Review_YYYY-MM-DD_ProjectWide.md`
 
 CRITICAL INSTRUCTIONS:
 1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
