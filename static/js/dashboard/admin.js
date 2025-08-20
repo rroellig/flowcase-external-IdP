@@ -272,20 +272,18 @@ function AdminChangeTab(tab, element = null)
 					<tr>
 						<th>Name</th>
 						<th>URL</th>
-						${json["registry_locked"] ? '' : '<th>Actions</th>'}
+						<th>Actions</th>
 					</tr>
 					${json["registry"].map(registry => `
 						<tr>
-							<td>
-								${registry.info.name}
-								${json["registry_locked"] ? '<i class="fas fa-lock" title="Registry is locked"></i>' : ''}
-							</td>
+							<td>${registry.info.name}</td>
 							<td>${registry.url}</td>
-							${json["registry_locked"] ? '' : 
-								`<td class="admin-modal-table-actions">
-									<i class="fas fa-trash" onclick="AdminDeleteRegistry('${registry.id}')"></i>
-								</td>`
-							}
+							<td class="admin-modal-table-actions">
+								${json["registry_locked"] ? 
+									'<i class="fas fa-lock" title="Registry is locked"></i>' :
+									`<i class="fas fa-trash" onclick="AdminDeleteRegistry('${registry.id}')"></i>`
+								}
+							</td>
 						</tr>
 					`).join('')}
 				</table>
