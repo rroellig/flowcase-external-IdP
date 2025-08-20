@@ -220,9 +220,15 @@ function AdminChangeTab(tab, element = null)
 			break;
 		case 'registry':
 			header.innerText = "Registry";
-			subtext.innerText = "View and manage registries.";
 
 			FetchAdminRegistry(function(json) {
+
+			// Update subtitle based on lock status
+			if (json["registry_locked"]) {
+				subtext.innerText = "View locked registry.";
+			} else {
+				subtext.innerText = "View and manage registries.";
+			}
 
 			var droplets = [];
 			//combine all droplets from all registries into one array and order by display name
@@ -254,17 +260,13 @@ function AdminChangeTab(tab, element = null)
 			});
 
 			content.innerHTML = `
-				${json["registry_locked"] ? 
-					`<div class="admin-registry-locked">
-						<p><strong>Registry is locked:</strong> Registry management is disabled. The system is using a fixed registry configuration.</p>
-					</div>` : 
+				${json["registry_locked"] ? '' : 
 					`<div class="admin-registry-add">
 						<input type="text" placeholder="URL" id="admin-registry-url">
 						<button class="button-1-full" onclick="AdminAddRegistry()">Add Registry</button>
-					</div>`
+					</div>
+					<hr>`
 				}
-
-				<hr>
 
 				<table class="admin-modal-table">
 					<tr>
@@ -274,7 +276,10 @@ function AdminChangeTab(tab, element = null)
 					</tr>
 					${json["registry"].map(registry => `
 						<tr>
-							<td>${registry.info.name}</td>
+							<td>
+								${registry.info.name}
+								${json["registry_locked"] ? '<i class="fas fa-lock" title="Registry is locked"></i>' : ''}
+							</td>
 							<td>${registry.url}</td>
 							${json["registry_locked"] ? '' : 
 								`<td class="admin-modal-table-actions">
