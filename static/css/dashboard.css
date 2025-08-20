@@ -1094,3 +1094,18 @@ nav .nav-links .fas {
 	font-size: 11px;
 	margin-bottom: 4px;
 }
+
+/* Registry locked message styling */
+.admin-registry-locked {
+	background-color: var(--warning-bg, #fff3cd);
+	border: 1px solid var(--warning-border, #ffeaa7);
+	color: var(--warning-text, #856404);
+	padding: 12px 16px;
+	border-radius: 4px;
+	margin-bottom: 16px;
+}
+
+.admin-registry-locked p {
+	margin: 0;
+	font-size: 14px;
+}

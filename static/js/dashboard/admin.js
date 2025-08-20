@@ -254,10 +254,15 @@ function AdminChangeTab(tab, element = null)
 			});
 
 			content.innerHTML = `
-				<div class="admin-registry-add">
-					<input type="text" placeholder="URL" id="admin-registry-url">
-					<button class="button-1-full" onclick="AdminAddRegistry()">Add Registry</button>
-				</div>
+				${json["registry_locked"] ? 
+					`<div class="admin-registry-locked">
+						<p><strong>Registry is locked:</strong> Registry management is disabled. The system is using a fixed registry configuration.</p>
+					</div>` : 
+					`<div class="admin-registry-add">
+						<input type="text" placeholder="URL" id="admin-registry-url">
+						<button class="button-1-full" onclick="AdminAddRegistry()">Add Registry</button>
+					</div>`
+				}
 
 				<hr>
 
@@ -265,15 +270,17 @@ function AdminChangeTab(tab, element = null)
 					<tr>
 						<th>Name</th>
 						<th>URL</th>
-						<th>Actions</th>
+						${json["registry_locked"] ? '' : '<th>Actions</th>'}
 					</tr>
 					${json["registry"].map(registry => `
 						<tr>
 							<td>${registry.info.name}</td>
 							<td>${registry.url}</td>
-							<td class="admin-modal-table-actions">
-								<i class="fas fa-trash" onclick="AdminDeleteRegistry('${registry.id}')"></i>
-							</td>
+							${json["registry_locked"] ? '' : 
+								`<td class="admin-modal-table-actions">
+									<i class="fas fa-trash" onclick="AdminDeleteRegistry('${registry.id}')"></i>
+								</td>`
+							}
 						</tr>
 					`).join('')}
 				</table>
