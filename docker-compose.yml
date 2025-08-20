@@ -21,7 +21,7 @@ services:
       - FLASK_DEBUG=0
     networks:
       - default_network
-    command: python run.py --traefik-authentik --registry https://registry.flowcase.home
+    command: python run.py --traefik-authentik --registry-lock https://registry.flowcase.home
 
   nginx:
     image: nginx:1.28-alpine
