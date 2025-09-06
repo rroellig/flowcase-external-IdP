@@ -5,9 +5,24 @@ import argparse
 
 # Parse command line arguments first, before any imports that might fail
 def parse_args():
-    parser = argparse.ArgumentParser(description='Run FlowCase application')
+    parser = argparse.ArgumentParser(
+        description='Run FlowCase application',
+        epilog='''
+Argument Classification:
+
+Debug/Development Arguments (for local development without Docker):
+  --port              Port to run the application on
+  --ext-idp-user      Simulate external IDP provider with specified username
+                      (bypass sign in, create username if not yet existing)
+
+Production Arguments:
+  --traefik-authentik Enable Traefik + Authentik integration mode
+  --registry-lock     Name of a fixed registry to lock registry edit in the frontend
+        ''',
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument('--port', type=int, help='Port to run the application on')
-    parser.add_argument('--ext-idp-user', help='Simulate external IDP provider with specified username')
+    parser.add_argument('--ext-idp-user', help='Simulate external IDP provider with specified username (bypass sign in, create username if not yet existing)')
     parser.add_argument('--traefik-authentik', action='store_true',
                        help='Enable Traefik + Authentik integration mode (reads username from X-Authentik-Username header)')
     parser.add_argument('--registry-lock', required=False,
