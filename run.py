@@ -10,14 +10,15 @@ def parse_args():
         epilog='''
 Argument Classification:
 
-Debug/Development Arguments (for local development without Docker):
-  --port              Port to run the application on
-  --ext-idp-user      Simulate external IDP provider with specified username
-                      (bypass sign in, create username if not yet existing)
-
 Production Arguments:
   --traefik-authentik Enable Traefik + Authentik integration mode
   --registry-lock     Name of a fixed registry to lock registry edit in the frontend
+
+Debug/Development Arguments (for local development without Docker):
+  python run.py ...
+  --port              Port to run the application on
+  --ext-idp-user      Simulate external IDP provider with specified username
+                      (bypass sign in, create username if not yet existing)
         ''',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )

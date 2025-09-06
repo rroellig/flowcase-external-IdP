@@ -19,6 +19,9 @@
 This is an enhanced fork of [flowcase/flowcase](https://github.com/flowcase/flowcase) extending the original with enterprise-grade authentication and access control features.
 All improvements are contributed back to the original project via pull requests.
 
+> [!IMPORTANT]
+> **Enhanced features are available on the `integration` branch.** The `main` branch tracks the upstream repository. To experience the full enhanced functionality, ensure you're using the `integration` branch.
+
 ## What is Flowcase?
 
 **Flowcase** is a free and completely open-source alternative to Kasm Workspaces, enabling secure container streaming for your applications. 
@@ -60,51 +63,167 @@ Before getting started, ensure you have:
 
 ## Setup Instructions
 
-1. **Clone the repository**
+| Option | Description | Authentication | SSL/HTTPS | Use Case |
+|--------|-------------|----------------|-----------|----------|
+| **Option 1** | Docker Stack with Traefik + Authentik | External Identity Provider | Yes (automatic) | Production deployment |
+| **Option 2** | Docker Stack (Standalone) | Built-in users | No (HTTP only) | Simple deployment, experience new UI features |
+| **Option 3** | Direct Command Line | Built-in or simulated | No | UI Development/Debug |
+
+Choose one of the following deployment options:
+
+### Option 1: Docker Stack with Traefik + Authentik (Full Stack)
+
+#### 1. Clone the repository
+
 ```shell
 git clone https://github.com/rroellig/flowcase.git
 cd flowcase
 git checkout integration
 ```
 
-2. **Configure environment variables**
+#### 2. Configure environment variables
+
 ```shell
 cp .env.example .env
 # Edit .env with your domain and authentication settings
 ```
 
-3. **Build the Flowcase image**
+#### 3. Prepare DNS
+
+Create a DNS entry that points to your server:
+
+- The DNS name needs to match your `DOMAIN` setting in `.env`
+- Ideally create a wildcard entry (e.g., `*.example.com`) to resolve all services
+- Traefik will handle routing to the appropriate service by name and manage SSL certificates automatically
+
+#### 4. Build the Flowcase image
+
 ```shell
 docker compose build
 ```
 
-4. **Launch the full stack**
+#### 5. Launch the full stack
+
 ```shell
 docker compose up -d
 ```
 
-5. **Access the services**
+#### 6. Configure Authentik
 
-- Flowcase: `https://flowcase.${DOMAIN}`
-- Authentik: `https://authentik.${DOMAIN}`
-- Traefik Dashboard: `https://traefik.${DOMAIN}`
+After the services are running, configure Authentik properly:
+
+**Initial Setup**: Navigate to `https://authentik.<DOMAIN>/if/flow/initial-setup/` to complete the initial Authentik configuration.
+
+1. **Create Proxy Providers** (forward auth, single application) for the following applications:
+   - `flowcase` (required)
+   - `traefik` (optional, for dashboard access)
+   - `registry` (optional, for private registry access)
+
+   ![Authentik Applications](doc/Authentik-Applications.png)
+
+2. **Configure Outposts** - Don't forget to set up outposts for the proxy providers
+
+3. **Set up Users** - Create users in Authentik using either:
+   - Local user accounts
+   - Federated users/social login integration
+
+> [!NOTE]
+> Refer to the [Authentik documentation](https://docs.goauthentik.io) for detailed proxy provider configuration instructions.
+
+#### 7. Access the services
+
+- Flowcase: `https://flowcase.<DOMAIN>`
+- Authentik: `https://authentik.<DOMAIN>`
+- Traefik Dashboard: `https://traefik.<DOMAIN>`
+
+### Option 2: Docker Stack without Traefik + Authentik (Standalone, http only)
+
+#### 1. Clone the repository
+
+```shell
+git clone https://github.com/rroellig/flowcase.git
+cd flowcase
+git checkout integration
+```
+
+#### 2. Build the Flowcase image
+
+```shell
+docker compose -f docker-compose.dev.yml build
+```
+
+#### 3. Launch with Docker Compose
+
+```shell
+docker compose -f docker-compose.dev.yml up
+```
+
+> [!NOTE]
+> Default admin and user logins will be displayed in the terminal output on initial startup
+
+#### 4. Access Flowcase
+
+Open your browser and navigate to:
+
+```
+http://localhost:80
+```
+
+### Option 3: Direct Command Line (Development/Debug)
+
+#### 1. Clone the repository
+
+```shell
+git clone https://github.com/rroellig/flowcase.git
+cd flowcase
+git checkout integration
+```
+
+#### 2. Optional: Clean data directory
+
+```shell
+rm -rf data
+```
+
+#### 3. Set up Python environment
+
+```shell
+python -m venv venv
+source ./venv/bin/activate
+pip install -r requirements.txt
+```
+
+#### 4. Run Flowcase
+
+```shell
+python run.py --port 5001
+```
+
+#### 5. Access Flowcase
+
+Open your browser and navigate to:
+
+```
+http://localhost:5001
+```
 
 ## Configuration Options
 
-The application supports several command line configuration options via `run.py`. When using Docker Compose, these options should be set in the `docker-compose.yml` file under the `web` service's `command` section:
+The application supports several command line configuration options via `run.py`. Arguments are classified into production and development categories:
 
-### Authentication Modes
+### Production Arguments
+
+These arguments are intended for production deployments, typically configured in Docker Compose:
 
 - `--traefik-authentik`: Enable Traefik + Authentik integration mode (reads username from X-Authentik-Username header)
-- `--ext-idp-user <username>`: Simulate external identity provider with specified username (for testing)
+- `--registry-lock <registry-name>`: Name of a fixed registry to lock registry edit in the frontend
 
-### Registry Management
+### Debug/Development Arguments
 
-- `--registry-lock <registry-url>`: Lock the registry to a fixed URL, preventing users from changing it in the frontend. This security feature prevents users from adding untrusted registries
+These arguments are primarily for local development without Docker:
 
-### Server Configuration
-
-- `--port <port>`: Specify the port to run the application on
+- `--port <port>`: Port to run the application on
+- `--ext-idp-user <username>`: Simulate external IDP provider with specified username (bypass sign in, create username if not yet existing)
 
 ### Docker Compose Configuration
 
@@ -114,27 +233,18 @@ In `docker-compose.yml`, modify the web service command:
 services:
   web:
     # ... other configuration
-    command: python run.py --traefik-authentik --registry-lock https://my-registry.com
+    command: python run.py --traefik-authentik --registry-lock my-registry
 ```
 
-### Direct Usage Examples
+### Debug Usage Examples
 
 ```shell
-# Enable Traefik + Authentik integration
-python run.py --traefik-authentik
-
-# Lock registry to a specific URL
-python run.py --registry-lock https://my-private-registry.example.com
-
-# Simulate external user for testing
+# Development: Simulate external user for testing
 python run.py --ext-idp-user testuser
 
-# Combine multiple options
-python run.py --traefik-authentik --registry-lock https://registry.internal.com --port 8080
+# Development: Run on custom port
+python run.py --port 8080
 ```
-
-> [!NOTE]
-> The `--traefik-authentik` option takes precedence over `--ext-idp-user` if both are specified.
 
 ## Branch Information
 

@@ -7,7 +7,6 @@ services:
     container_name: flowcase-web-dev
     restart: unless-stopped
     volumes:
-      - .:/flowcase
       - flowcase-data:/flowcase/data
       - flowcase-nginx-data:/flowcase/nginx
       - /var/run/docker.sock:/var/run/docker.sock
@@ -18,7 +17,7 @@ services:
       - "5000"
     networks:
       - default_network
-    command: python run.py --debug
+    command: python run.py
 
   nginx:
     image: nginx:1.28-alpine
