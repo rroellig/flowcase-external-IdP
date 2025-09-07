@@ -11,9 +11,6 @@
 
 </div>
 
-> [!CAUTION]
-> This project is still in development and is not yet ready for production use. We do not currently support upgrading from older versions. Please use with caution.
-
 ## About This Fork
 
 This is an enhanced fork of [flowcase/flowcase](https://github.com/flowcase/flowcase) extending the original with enterprise-grade authentication and access control features.
@@ -40,18 +37,21 @@ All improvements are contributed back to the original project via pull requests.
 
 <div align="center">
 
-| External Identity | Advanced Access Control | Container Persistence | Network Flexibility | Registry Management |
-|:----------------:|:----------------------:|:--------------------:|:-------------------:|:------------------:|
-| Traefik + Authentik integration | Group-based droplet access | Containers survive restarts | Custom Docker network support | Registry URL locking |
+| External Identity | Advanced Access Control | Container Persistence | Network Flexibility | Registry Management | Profile Volume Management |
+|:----------------:|:----------------------:|:--------------------:|:-------------------:|:------------------:|:-----------------------:|
+| Traefik + Authentik integration | Group-based droplet access | Containers survive restarts | Custom Docker network support | Registry URL locking | Persistent Profile Volume Management with docker volumes |
+
 
 </div>
 
-- **🔐 External Identity Provider**: Full integration with Authentik via Traefik forward authentication
-- **👥 Group-Based Access Control**: Enhanced user and group management with granular permissions
-- **📦 Container Persistence**: Containers persist across application restarts
-- **🌐 Network Selection**: Support for custom Docker networks (lan*, vlan*, default)
-- **📋 Registry Management**: Registry URL locking and enhanced configuration options to prevent untrusted registries
-- **💾 Profile Volume Management**: Improved user profile and volume handling
+- **🔒 HTTPS Termination**: Reverse proxy (Traefik) with automatic certificate renewal by ACME (if available)
+- **🔐 External Identity Provider**: Full integration with external IdP (Authentik) via Traefik forward authentication. Support for internally managed users (Flowcase) and externally managed users (Authentik) ([screenshot](doc/External-IdP-Users.png))
+- **👥 Group-Based Access Control**: Enhanced user and group management with granular permissions ([screenshot](doc/Group-based-droplet-access.png))
+- **👤 Improved User Group Membership Editor**: Streamlined interface showing group memberships and real-time droplet access visibility ([screenshot](doc/Improved-User-Group-Membership-Editor.png))
+- **📦 Container Persistence**: Containers persist across flowcase application restarts, updates, and host reboots
+- **🌐 Network Selection**: Support for custom Docker networks (lan*, vlan*, default) ([screenshot](doc/Network-Selections.png))
+- **📋 Registry Management**: Registry URL locking and enhanced configuration options to prevent untrusted registries ([screenshot](doc/Locked-Registry.png))
+- **💾 Persistent Profile Volume Management**: Improved user profile and volume handling using Docker volumes for persistent storage. One volume per configured path is created, with path templates supporting variables that are expanded at runtime: `{user_id}`, `{user_name}`, `{droplet_id}`, `{droplet_name}` ([screenshot](doc/Persistant-Profiles.png))
 
 ## Prerequisites
 
@@ -60,6 +60,8 @@ Before getting started, ensure you have:
 - Docker and Docker Compose installed on your machine
 - A user with sudo/root access or a user in the `docker` group
 - Basic knowledge of container management
+- ACME Server (for automatic SSL certificates in Option 1)
+- Knowledge about certificate management with Traefik reverse proxy (for Option 1)
 
 ## Setup Instructions
 
