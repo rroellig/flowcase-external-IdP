@@ -35,23 +35,16 @@ All improvements are contributed back to the original project via pull requests.
 
 ### Enhanced Features (this fork)
 
-<div align="center">
-
-| External Identity | Advanced Access Control | Container Persistence | Network Flexibility | Registry Management | Profile Volume Management |
-|:----------------:|:----------------------:|:--------------------:|:-------------------:|:------------------:|:-----------------------:|
-| Traefik + Authentik integration | Group-based droplet access | Containers survive restarts | Custom Docker network support | Registry URL locking | Persistent Profile Volume Management with docker volumes |
-
-
-</div>
-
-- **🔒 HTTPS Termination**: Reverse proxy (Traefik) with automatic certificate renewal by ACME (if available)
-- **🔐 External Identity Provider**: Full integration with external IdP (Authentik) via Traefik forward authentication. Support for internally managed users (Flowcase) and externally managed users (Authentik) ([screenshot](doc/External-IdP-Users.png))
-- **👥 Group-Based Access Control**: Enhanced user and group management with granular permissions ([screenshot](doc/Group-based-droplet-access.png))
-- **👤 Improved User Group Membership Editor**: Streamlined interface showing group memberships and real-time droplet access visibility ([screenshot](doc/Improved-User-Group-Membership-Editor.png))
-- **📦 Container Persistence**: Containers persist across flowcase application restarts, updates, and host reboots
-- **🌐 Network Selection**: Support for custom Docker networks (lan*, vlan*, default) ([screenshot](doc/Network-Selections.png))
-- **📋 Registry Management**: Registry URL locking and enhanced configuration options to prevent untrusted registries ([screenshot](doc/Locked-Registry.png))
-- **💾 Persistent Profile Volume Management**: Improved user profile and volume handling using Docker volumes for persistent storage. One volume per configured path is created, with path templates supporting variables that are expanded at runtime: `{user_id}`, `{user_name}`, `{droplet_id}`, `{droplet_name}` ([screenshot](doc/Persistant-Profiles.png))
+| Symbol | Feature | Description | Screenshot |
+|--------|---------|-------------|------------|
+| 🔒 | **HTTPS Termination** | Reverse proxy (Traefik) with automatic certificate renewal by ACME (if available) | - |
+| 🔐 | **External Identity Provider** | Full integration with external IdP (Authentik) via Traefik forward authentication. Support for internally managed users (Flowcase) and externally managed users (Authentik) | [screenshot](doc/External-IdP-Users.png) |
+| 👥 | **Group-Based Access Control** | Enhanced user and group management with granular permissions | [screenshot](doc/Group-based-droplet-access.png) |
+| 👤 | **Improved User Group Membership Editor** | Streamlined interface showing group memberships and real-time droplet access visibility | [screenshot](doc/Improved-User-Group-Membership-Editor.png) |
+| 📦 | **Container Persistence** | Containers persist across flowcase application restarts, updates, and host reboots | - |
+| 🌐 | **Network Selection** | Support for custom Docker networks (lan*, vlan*, default) | [screenshot](doc/Network-Selections.png) |
+| 📋 | **Registry Management** | Registry URL locking and enhanced configuration options to prevent untrusted registries | [screenshot](doc/Locked-Registry.png) |
+| 💾 | **Persistent Profile Volume Management** | Improved user profile and volume handling using Docker volumes for persistent storage. One volume per configured path is created, with path templates supporting variables that are expanded at runtime: `{user_id}`, `{user_name}`, `{droplet_id}`, `{droplet_name}` | [screenshot](doc/Persistant-Profiles.png) |
 
 ## Prerequisites
 
